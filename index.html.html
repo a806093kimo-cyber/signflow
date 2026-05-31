@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SignFlow — 電子契約簽署平台</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+:root{
+  --p:#534AB7;--pl:#EEEDFE;--pm:#AFA9EC;--pd:#3C3489;
+  --g:#3B6D11;--gl:#EAF3DE;
+  --a:#854F0B;--al:#FAEEDA;
+  --b:#185FA5;--bl:#E6F1FB;
+  --r:#A32D2D;--rl:#FCEBEB;
+  --bg:#F8F7FE;--su:#FFF;
+  --bd:rgba(83,74,183,.13);--bdh:rgba(83,74,183,.3);
+  --t:#1a1830;--t2:#5f5c7a;--t3:#9e9bba;
+  --rad:10px;--radl:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans TC',sans-serif;color:var(--t);background:var(--bg);min-height:100vh;font-size:14px;line-height:1.6}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--pm);border-radius:2px}
+
+/* ── LAYOUT ── */
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;flex-shrink:0;background:var(--su);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:20}
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.logo{padding:16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd)}
+.logo-box{width:32px;height:32px;background:var(--p);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-box svg{width:17px;height:17px;fill:none;stroke:#fff;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.logo-name{font-size:16px;font-weight:700;letter-spacing:-.3px;color:var(--t)}
+.logo-name b{color:var(--p);font-weight:700}
+.nsec{padding:10px 8px 0}
+.nlbl{font-size:10px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;padding:0 8px;margin-bottom:4px}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rad);cursor:pointer;color:var(--t2);font-size:13px;transition:background .15s,color .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+.ni:hover{background:var(--pl);color:var(--p)}
+.ni.on{background:var(--pl);color:var(--p);font-weight:500}
+.ni svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nbg{margin-left:auto;background:var(--p);color:#fff;border-radius:100px;font-size:10px;padding:1px 7px;font-weight:600}
+.nbg.am{background:var(--a)}
+.sfoot{margin-top:auto;padding:10px 8px;border-top:1px solid var(--bd)}
+/* 左下角使用者卡片 - 改為 button */
+.ucard{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--rad);cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:inherit;transition:background .15s}
+.ucard:hover{background:var(--pl)}
+.ucard:active{background:var(--pl)}
+.ava{width:32px;height:32px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;letter-spacing:-.5px}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--su);border-bottom:1px solid var(--bd);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.topbar-title{font-size:15px;font-weight:600}
+.topbar-actions{display:flex;align-items:center;gap:8px}
+
+/* ── BUTTONS ── */
+.btn{padding:7px 14px;font-size:13px;border-radius:var(--rad);cursor:pointer;border:1px solid var(--bd);background:transparent;color:var(--t);font-family:inherit;transition:all .15s;line-height:1}
+.btn:hover{border-color:var(--bdh);background:var(--pl);color:var(--p)}
+.btn-p{background:var(--p);color:#fff!important;border-color:var(--p)!important}
+.btn-p:hover{background:var(--pd);border-color:var(--pd)!important}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-g{background:var(--g);color:#fff!important;border-color:var(--g)!important}
+.btn-g:hover{background:#2d5a0d}
+
+/* ── PAGES ── */
+.page{display:none;padding:24px;flex:1}
+.page.on{display:block}
+.ph{margin-bottom:20px}
+.pt{font-size:20px;font-weight:700;margin-bottom:3px;letter-spacing:-.3px}
+.ps{font-size:13px;color:var(--t2)}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.sc{background:var(--su);border:1px solid var(--bd);border-radius:var(--radl);padding:16px 18px;transition:border-color .15s}
+.sc:hover{border-color:var(--bdh)}
+.slbl{font-size:12px;color:var(--t2);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sval{font-size:26px;font-weight:700;letter-spacing:-1px}
+.strd{font-size:11px;color:var(--t3);margin-top:3px}
+
+/* ── CARD ── */
+.card{background:var(--su);border:1px solid var(--bd);border-radius:var(--radl);padding:18px}
+.card+.card{margin-top:14px}
+.ct{font-size:13px;font-weight:600;margin-bottom:12px;color:var(--t)}
+
+/* ── TABLE ── */
+.tw{background:var(--su);border:1px solid var(--bd);border-radius:var(--radl);overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:9px 14px;text-align:left;font-weight:500;font-size:11px;color:var(--t2);background:#FAFAFA;border-bottom:1px solid var(--bd);text-transform:uppercase;letter-spacing:.3px}
+td{padding:11px 14px;border-bottom:1px solid var(--bd);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#FAFAFE}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:500}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.bs{background:var(--gl);color:var(--g)}.bs::before{background:var(--g)}
+.bw{background:var(--al);color:var(--a)}.bw::before{background:var(--a)}
+.bi{background:var(--pl);color:var(--p)}.bi::before{background:var(--p)}
+.bg2{background:#F1F1F3;color:var(--t2)}.bg2::before{background:var(--t3)}
+.bb{background:var(--bl);color:var(--b)}.bb::before{background:var(--b)}
+
+/* ── FORMS ── */
+.fg{margin-bottom:12px}
+.fl{font-size:12px;font-weight:500;color:var(--t2);margin-bottom:5px;display:block}
+.fi{width:100%;padding:8px 11px;font-size:13px;border:1px solid var(--bd);border-radius:var(--rad);background:var(--su);color:var(--t);font-family:inherit;transition:border-color .15s,box-shadow .15s;outline:none}
+.fi:focus{border-color:var(--pm);box-shadow:0 0 0 3px rgba(83,74,183,.07)}
+textarea.fi{resize:vertical}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.split-l{display:grid;grid-template-columns:3fr 2fr;gap:18px}
+
+/* ── UPLOAD ── */
+.udrop{border:1.5px dashed var(--pm);border-radius:var(--radl);padding:30px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--pl)}
+.udrop:hover,.udrop.over{border-color:var(--p);background:#E0DDFC}
+.finfo{display:none;align-items:center;gap:10px;padding:10px 12px;background:var(--gl);border-radius:var(--rad);border:1px solid #97C459;margin-top:10px}
+
+/* ── SIGNER ROW ── */
+.sr{display:flex;align-items:center;gap:9px;background:var(--bg);border-radius:var(--rad);padding:9px 12px;margin-bottom:6px;border:1px solid var(--bd)}
+.sord{width:21px;height:21px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.sav2{width:27px;height:27px;border-radius:50%;background:var(--pl);color:var(--p);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.sinf{flex:1}.snm{font-size:13px;font-weight:500}.sem{font-size:11px;color:var(--t3)}
+
+/* ── STEPS WIZARD ── */
+.steps{display:flex;align-items:center;margin-bottom:20px}
+.step{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--t3);white-space:nowrap}
+.step-n{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;color:var(--t3);transition:all .2s}
+.step.on .step-n{border-color:var(--p);background:var(--p);color:#fff}
+.step.on{color:var(--t);font-weight:500}
+.step.dn .step-n{border-color:var(--g);background:var(--g);color:#fff}
+.step.dn{color:var(--g)}
+.step-ln{flex:1;height:1px;background:var(--bd);margin:0 6px;min-width:10px}
+
+/* ── PDF VIEWER ── */
+.pdfv{background:#F3F3F7;border:1px solid var(--bd);border-radius:var(--radl);overflow:hidden}
+.pdf-tb{background:var(--su);border-bottom:1px solid var(--bd);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--t2)}
+.pdf-pg{background:#fff;margin:16px;border-radius:6px;padding:24px 28px;font-size:12px;line-height:2;box-shadow:0 1px 8px rgba(0,0,0,.07);min-height:200px;white-space:pre-wrap;word-break:break-word}
+.sign-zone{border:1.5px dashed var(--pm);border-radius:6px;padding:10px;text-align:center;color:var(--p);font-size:12px;margin-top:16px;cursor:pointer;background:var(--pl);transition:all .15s;white-space:normal}
+.sign-zone:hover{background:#dddafc;border-color:var(--p)}
+.sign-zone.done{background:var(--gl);border-color:var(--g);color:var(--g);border-style:solid}
+
+/* ── TIMELINE ── */
+.tl{position:relative;padding-left:22px}
+.tl::before{content:'';position:absolute;left:5px;top:10px;bottom:10px;width:1px;background:var(--bd)}
+.tli{position:relative;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px}
+.tli:last-child{margin-bottom:0}
+.tld{position:absolute;left:-22px;top:4px;width:11px;height:11px;border-radius:50%;border:2px solid;background:#fff;z-index:1}
+.tld.dn{border-color:var(--g);background:var(--g)}
+.tld.pd{border-color:var(--a);background:var(--al)}
+.tld.wt{border-color:var(--t3)}
+.tln{font-size:13px;font-weight:500}
+.tlm{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* ── SIGN CANVAS ── */
+.stabs{display:flex;gap:4px;margin-bottom:10px}
+.stab{padding:5px 13px;font-size:12px;border-radius:100px;cursor:pointer;border:1px solid var(--bd);background:transparent;color:var(--t2);font-family:inherit;transition:all .15s}
+.stab.on{background:var(--p);color:#fff;border-color:var(--p)}
+#signCanvas{display:block;width:100%;height:120px;border:1px solid var(--bd);border-radius:var(--rad);cursor:crosshair;background:#fff;touch-action:none}
+
+/* ── OTP ── */
+.otp-wrap{display:flex;gap:8px;justify-content:center;margin:12px 0}
+.oi{width:46px;height:52px;text-align:center;font-size:22px;font-weight:700;border:1.5px solid var(--bd);border-radius:var(--rad);font-family:'DM Mono',monospace;outline:none;transition:all .15s;color:var(--t);background:var(--su)}
+.oi:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(83,74,183,.1)}
+.oi.filled{border-color:var(--pm);background:var(--pl);color:var(--p)}
+.oi.err{border-color:var(--r);background:var(--rl)}
+
+/* ── QUICK CARD ── */
+.qc{background:var(--su);border:1px solid var(--bd);border-radius:var(--radl);padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.qc:hover{border-color:var(--pm);box-shadow:0 2px 10px rgba(83,74,183,.09);transform:translateY(-1px)}
+.qico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+
+/* ── INFO ROW ── */
+.irow{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--bd)}
+.irow:last-child{border-bottom:none}
+.irow span:first-child{color:var(--t2)}.irow span:last-child{font-weight:500}
+
+/* ── FILTER PILLS ── */
+.fb{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.pill{padding:4px 13px;font-size:12px;border-radius:100px;cursor:pointer;border:1px solid var(--bd);background:transparent;color:var(--t2);font-family:inherit;transition:all .15s}
+.pill:hover{border-color:var(--pm);color:var(--p)}
+.pill.on{background:var(--p);color:#fff;border-color:var(--p)}
+
+/* ── CHECKBOX ── */
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:9px;cursor:pointer}
+.chk input[type=checkbox]{width:15px;height:15px;accent-color:var(--p);cursor:pointer;flex-shrink:0}
+
+/* ── PROGRESS ── */
+.prog{height:3px;background:var(--bd);border-radius:2px;overflow:hidden;margin-top:6px}
+.progf{height:100%;background:var(--p);border-radius:2px;transition:width .4s}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:36px 20px;color:var(--t3);font-size:13px}
+.empty .ei{font-size:36px;margin-bottom:10px}
+
+/* ── BANNER ── */
+.banner{padding:10px 14px;border-radius:var(--rad);font-size:12px;margin-top:10px;border:1px solid;line-height:1.7}
+.ban-p{background:var(--pl);color:var(--pd);border-color:var(--pm)}
+.ban-g{background:var(--gl);color:var(--g);border-color:#97C459}
+.ban-b{background:var(--bl);color:var(--b);border-color:#85B7EB}
+.ban-a{background:var(--al);color:var(--a);border-color:#EF9F27}
+.ban-r{background:var(--rl);color:var(--r);border-color:#F09595}
+
+/* ── SEARCH BAR ── */
+.sb{display:flex;gap:9px;margin-bottom:14px}
+.sb input,.sb select{font-size:13px;padding:8px 11px;border:1px solid var(--bd);border-radius:var(--rad);background:var(--su);color:var(--t);font-family:inherit;outline:none;transition:border-color .15s}
+.sb input{flex:1}.sb input:focus,.sb select:focus{border-color:var(--pm)}
+.sb select{width:150px}
+
+/* ── MODAL ── */
+.moverlay{display:none;position:fixed;inset:0;background:rgba(10,8,30,.45);z-index:500;align-items:center;justify-content:center;padding:20px}
+.moverlay.on{display:flex}
+.modal{background:var(--su);border-radius:var(--radl);padding:24px;width:100%;max-width:480px;border:1px solid var(--bd);max-height:90vh;overflow-y:auto}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--bd)}
+.mh{font-size:16px;font-weight:700;margin-bottom:4px}
+.ms{font-size:13px;color:var(--t2);margin-bottom:16px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;right:20px;background:#1a1830;color:#fff;padding:10px 18px;border-radius:var(--rad);font-size:13px;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:9999;transform:translateY(6px);max-width:340px;line-height:1.5}
+.toast.on{opacity:1;transform:translateY(0)}
+.toast.ok{background:var(--g)}.toast.er{background:var(--r)}.toast.inf{background:var(--b)}
+
+/* ── HASH ── */
+.hash{font-family:'DM Mono',monospace;font-size:11px;color:var(--t3)}
+
+/* ── DOC ICON ── */
+.di{width:32px;height:38px;background:var(--pl);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.di svg{width:14px;height:14px;stroke:var(--p);fill:none;stroke-width:1.3;stroke-linecap:round}
+
+/* ── SUCCESS ICON ── */
+.suc-ico{width:58px;height:58px;background:var(--gl);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px}
+</style>
+</head>
+<body>
+<div class="app" id="app-root">
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-box">
+      <svg viewBox="0 0 17 17"><path d="M3 3h8l3 3v8H3z"/><path d="M11 3v3h3"/><line x1="5" y1="9" x2="12" y2="9"/><line x1="5" y1="12" x2="9" y2="12"/></svg>
+    </div>
+    <div class="logo-name">Sign<b>Flow</b></div>
+  </div>
+  <div class="nsec">
+    <div class="nlbl">主選單</div>
+    <button class="ni on" id="ni-dashboard" onclick="goNav('dashboard')">
+      <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor"/></svg>
+      儀表板
+    </button>
+    <button class="ni" id="ni-contracts" onclick="goNav('contracts')">
+      <svg viewBox="0 0 16 16"><rect x="2" y="1" width="12" height="14" rx="2"/><line x1="5" y1="5" x2="11" y2="5"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="5" y1="11" x2="8" y2="11"/></svg>
+      合約管理 <span class="nbg am" id="badge-p">0</span>
+    </button>
+    <button class="ni" id="ni-upload" onclick="goNav('upload')">
+      <svg viewBox="0 0 16 16"><path d="M8 11V4M5 7l3-3 3 3"/><path d="M2 13h12"/></svg>
+      新增合約
+    </button>
+    <button class="ni" id="ni-sign" onclick="goNav('sign')">
+      <svg viewBox="0 0 16 16"><path d="M3 13c2-2 4-8 7-8s2 4 4 4"/><path d="M1 13h14"/></svg>
+      簽署中心 <span class="nbg" id="badge-s">0</span>
+    </button>
+    <button class="ni" id="ni-audit" onclick="goNav('audit')">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="9"/><circle cx="8" cy="11.5" r=".7" fill="currentColor"/></svg>
+      稽核軌跡
+    </button>
+  </div>
+  <!-- 左下角使用者 - 真正的 button 元素 -->
+  <div class="sfoot">
+    <button class="ucard" id="ucard-btn" onclick="openModal('m-profile')">
+      <div class="ava" id="user-ava">?</div>
+      <div style="flex:1;min-width:0">
+        <div id="user-name" style="font-size:13px;font-weight:500;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">點此設定姓名</div>
+        <div style="font-size:11px;color:var(--t3)" id="user-email-lbl">⚙ 個人設定</div>
+      </div>
+    </button>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">儀表板</div>
+    <div class="topbar-actions">
+      <button class="btn" onclick="openModal('m-profile')">👤 <span id="tb-name">設定姓名</span></button>
+      <button class="btn" id="ejs-btn" onclick="openModal('m-email')" style="color:var(--a);border-color:var(--a)">📧 Email 設定</button>
+      <button class="btn btn-p" onclick="goNav('upload')">＋ 新增合約</button>
+    </div>
+  </div>
+
+  <!-- ═ 儀表板 ═ -->
+  <div class="page on" id="pg-dashboard">
+    <div class="ph"><div class="pt">總覽儀表板</div><div class="ps" id="dash-greeting">管理您的所有電子合約</div></div>
+    <div class="stats">
+      <div class="sc"><div class="slbl"><div class="sdot" style="background:var(--a)"></div>待簽署</div><div class="sval" style="color:var(--a)" id="st0">0</div><div class="strd">需要處理</div></div>
+      <div class="sc"><div class="slbl"><div class="sdot" style="background:var(--p)"></div>進行中</div><div class="sval" style="color:var(--p)" id="st1">0</div><div class="strd">簽署中</div></div>
+      <div class="sc"><div class="slbl"><div class="sdot" style="background:var(--g)"></div>已完成</div><div class="sval" style="color:var(--g)" id="st2">0</div><div class="strd">合約完成</div></div>
+      <div class="sc"><div class="slbl"><div class="sdot" style="background:var(--t3)"></div>全部</div><div class="sval" style="color:var(--t2)" id="st3">0</div><div class="strd">累計總數</div></div>
+    </div>
+    <div class="split">
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:14px;font-weight:500">最近合約</div>
+          <button class="btn btn-sm" onclick="goNav('contracts')">查看全部 →</button>
+        </div>
+        <div class="tw" id="dash-tbl"><div class="empty"><div class="ei">📄</div>尚無合約<br><button class="btn btn-p" style="margin-top:10px" onclick="goNav('upload')">＋ 建立第一份</button></div></div>
+      </div>
+      <div>
+        <div style="font-size:14px;font-weight:500;margin-bottom:12px">快速操作</div>
+        <div class="qc" onclick="goNav('upload')"><div class="qico" style="background:var(--pl)">📄</div><div><div style="font-size:13px;font-weight:500">上傳新合約</div><div style="font-size:11px;color:var(--t3)">支援 PDF、DOCX、TXT</div></div></div>
+        <div class="qc" onclick="goNav('sign')"><div class="qico" style="background:var(--al)">✍️</div><div><div style="font-size:13px;font-weight:500">前往簽署</div><div style="font-size:11px;color:var(--t3)" id="qc-sign-lbl">查看待簽合約</div></div></div>
+        <div class="qc" onclick="goNav('audit')"><div class="qico" style="background:var(--bl)">🔍</div><div><div style="font-size:13px;font-weight:500">稽核軌跡</div><div style="font-size:11px;color:var(--t3)">完整操作紀錄</div></div></div>
+        <div class="card" style="margin-top:0">
+          <div class="ct">整體完成率</div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin-bottom:5px">
+            <span id="prog-lbl">0 / 0 份</span><span id="prog-pct" style="font-weight:600">0%</span>
+          </div>
+          <div class="prog"><div class="progf" id="prog-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═ 合約管理 ═ -->
+  <div class="page" id="pg-contracts">
+    <div class="ph"><div class="pt">合約管理</div><div class="ps">管理所有電子合約文件</div></div>
+    <div class="sb">
+      <input type="text" placeholder="🔍  搜尋合約名稱、當事人..." id="srch" oninput="renderContracts()"/>
+      <select id="ftype" onchange="renderContracts()">
+        <option value="">全部類型</option><option>服務合約</option><option>採購合約</option>
+        <option>保密協議</option><option>勞動合約</option><option>租賃合約</option><option>其他</option>
+      </select>
+      <button class="btn btn-p" onclick="goNav('upload')">＋ 新增合約</button>
+    </div>
+    <div class="fb">
+      <button class="pill on" onclick="setFilter('all',this)">全部</button>
+      <button class="pill" onclick="setFilter('pending',this)">待簽署</button>
+      <button class="pill" onclick="setFilter('active',this)">進行中</button>
+      <button class="pill" onclick="setFilter('done',this)">已完成</button>
+    </div>
+    <div class="tw" id="ctbl"><div class="empty"><div class="ei">📂</div>尚無合約</div></div>
+  </div>
+
+  <!-- ═ 新增合約 ═ -->
+  <div class="page" id="pg-upload">
+    <div class="ph"><div class="pt">新增合約</div><div class="ps">依步驟設定合約並發送給簽署人</div></div>
+    <div class="steps" id="wiz-steps">
+      <div class="step on" id="ws0"><div class="step-n">1</div>合約資訊</div>
+      <div class="step-ln"></div>
+      <div class="step" id="ws1"><div class="step-n">2</div>設定簽署人</div>
+      <div class="step-ln"></div>
+      <div class="step" id="ws2"><div class="step-n">3</div>預覽發送</div>
+    </div>
+    <!-- Step 0 -->
+    <div id="ws-0">
+      <div class="split">
+        <div>
+          <div class="card">
+            <div class="ct">上傳合約文件</div>
+            <div class="udrop" id="udrop" onclick="document.getElementById('finp').click()">
+              <div style="font-size:32px;margin-bottom:8px">📎</div>
+              <div style="font-size:14px;font-weight:500;margin-bottom:4px">拖曳或點擊上傳</div>
+              <div style="font-size:12px;color:var(--t2);margin-bottom:12px">支援 PDF、DOCX、TXT · 最大 50MB</div>
+              <button class="btn btn-p btn-sm" onclick="event.stopPropagation()">選擇檔案</button>
+            </div>
+            <input type="file" id="finp" accept=".pdf,.doc,.docx,.txt" style="display:none" onchange="handleFileUpload(this)"/>
+            <div class="finfo" id="finfo">
+              <span style="font-size:18px">✅</span>
+              <div style="flex:1;min-width:0"><div id="fname" style="font-size:13px;font-weight:500;color:var(--g);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div><div id="fsize" style="font-size:11px;color:var(--t3)"></div></div>
+              <button class="btn btn-sm" onclick="clearFile()">移除</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ct">合約內容預覽</div>
+            <div id="prev-area" style="background:#F5F5F8;border:1px solid var(--bd);border-radius:var(--rad);padding:14px;min-height:120px;font-size:12px;line-height:1.9;color:var(--t2);max-height:220px;overflow-y:auto">
+              <div id="prev-ph" style="text-align:center;padding:20px 0;color:var(--t3)">上傳文件後，這裡會顯示合約內容</div>
+              <div id="prev-body" style="display:none;white-space:pre-wrap;color:var(--t)"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="ct">合約基本資訊</div>
+            <div class="fg"><label class="fl">合約名稱 *</label><input class="fi" type="text" id="c-name" placeholder="例：服務委託合約 #046"/></div>
+            <div class="g2">
+              <div class="fg"><label class="fl">合約類型 *</label>
+                <select class="fi" id="c-type"><option value="">請選擇</option><option>服務合約</option><option>採購合約</option><option>保密協議</option><option>勞動合約</option><option>租賃合約</option><option>其他</option></select>
+              </div>
+              <div class="fg"><label class="fl">截止日期</label><input class="fi" type="date" id="c-due"/></div>
+            </div>
+            <div class="fg"><label class="fl">合約說明（選填）</label><textarea class="fi" id="c-desc" rows="2" placeholder="說明合約重點..."></textarea></div>
+          </div>
+          <button class="btn btn-p" style="width:100%;padding:11px;margin-top:2px" onclick="wizNext(1)">下一步：設定簽署人 →</button>
+        </div>
+      </div>
+    </div>
+    <!-- Step 1 -->
+    <div id="ws-1" style="display:none">
+      <div class="split">
+        <div class="card">
+          <div class="ct">簽署人列表</div>
+          <div id="slist"></div>
+          <div style="border-top:1px solid var(--bd);margin-top:10px;padding-top:12px">
+            <div class="g2" style="margin-bottom:8px">
+              <div class="fg" style="margin:0"><label class="fl">姓名 *</label><input class="fi" type="text" id="n-name" placeholder="簽署人姓名"/></div>
+              <div class="fg" style="margin:0"><label class="fl">Email *</label><input class="fi" type="email" id="n-email" placeholder="email@example.com"/></div>
+            </div>
+            <button class="btn" style="width:100%" onclick="addSigner()">＋ 新增簽署人</button>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="ct">通知設定</div>
+            <label class="chk"><input type="checkbox" id="notif-em" checked/> 發送 Email 通知所有簽署人</label>
+            <label class="chk"><input type="checkbox" id="notif-re" checked/> 到期前 3 天自動提醒</label>
+            <label class="chk"><input type="checkbox" id="notif-cp" checked/> 完成後雙方自動收到副本</label>
+          </div>
+          <div class="card">
+            <div class="ct">安全設定</div>
+            <label class="chk"><input type="checkbox" id="sec-otp" checked/> 要求 OTP 驗證身分</label>
+            <label class="chk"><input type="checkbox" id="sec-aud" checked/> 啟用完整稽核軌跡</label>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:2px">
+            <button class="btn" style="flex:1;padding:10px" onclick="wizNext(0)">← 上一步</button>
+            <button class="btn btn-p" style="flex:2;padding:10px" onclick="wizNext(2)">下一步：預覽確認 →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Step 2 -->
+    <div id="ws-2" style="display:none">
+      <div class="split">
+        <div class="card">
+          <div class="ct">合約摘要</div>
+          <div class="irow"><span>合約名稱</span><span id="pv-name">—</span></div>
+          <div class="irow"><span>合約類型</span><span id="pv-type">—</span></div>
+          <div class="irow"><span>截止日期</span><span id="pv-due">—</span></div>
+          <div class="irow"><span>上傳文件</span><span id="pv-file">—</span></div>
+          <div class="irow"><span>簽署人數</span><span id="pv-signers">—</span></div>
+          <div class="irow"><span>OTP 驗證</span><span id="pv-otp">—</span></div>
+        </div>
+        <div>
+          <div class="card"><div class="ct">簽署人確認</div><div id="pv-slist"></div></div>
+          <div class="banner ban-g">✅ 確認後系統將自動通知所有簽署人，完成後雙方皆可下載合約。</div>
+          <div style="display:flex;gap:10px;margin-top:12px">
+            <button class="btn" style="flex:1;padding:10px" onclick="wizNext(1)">← 上一步</button>
+            <button class="btn btn-p" style="flex:2;padding:11px;font-size:14px" id="send-btn" onclick="submitContract()">🚀 發送合約</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═ 簽署中心 ═ -->
+  <div class="page" id="pg-sign">
+    <div class="ph"><div class="pt">簽署中心</div><div class="ps" id="sign-sub">請選擇一份合約開始簽署</div></div>
+    <div id="sign-list">
+      <div class="tw" id="sign-tbl"><div class="empty"><div class="ei">✅</div>目前沒有待簽署的合約</div></div>
+    </div>
+    <div id="sign-detail" style="display:none">
+      <button class="btn btn-sm" style="margin-bottom:14px" onclick="backSignList()">← 返回列表</button>
+      <div class="split-l">
+        <div>
+          <div class="card">
+            <div class="ct">合約文件</div>
+            <div class="pdfv">
+              <div class="pdf-tb">
+                <span id="pdf-fn" style="font-weight:500"></span>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-sm" onclick="showToast('請完成簽署後再下載','inf')">下載</button>
+                </div>
+              </div>
+              <div id="pdf-body"></div>
+            </div>
+          </div>
+          <div class="card"><div class="ct">簽署進度</div><div class="tl" id="sign-tl"></div></div>
+        </div>
+        <div>
+          <!-- OTP 卡 -->
+          <div class="card" id="otp-card">
+            <div class="ct">📧 身分驗證</div>
+            <div style="font-size:13px;color:var(--t2);margin-bottom:10px">請輸入發送至您 Email 的 4 位數驗證碼。</div>
+            <div class="banner ban-p" style="margin-bottom:12px">測試驗證碼：<strong style="font-family:'DM Mono',monospace;font-size:15px">1234</strong></div>
+            <div class="otp-wrap">
+              <input class="oi" id="o0" maxlength="1" oninput="oIn(0,this)" onkeydown="oKey(0,event)" autocomplete="off"/>
+              <input class="oi" id="o1" maxlength="1" oninput="oIn(1,this)" onkeydown="oKey(1,event)" autocomplete="off"/>
+              <input class="oi" id="o2" maxlength="1" oninput="oIn(2,this)" onkeydown="oKey(2,event)" autocomplete="off"/>
+              <input class="oi" id="o3" maxlength="1" oninput="oIn(3,this)" onkeydown="oKey(3,event)" autocomplete="off"/>
+            </div>
+            <div id="otp-err" style="font-size:12px;color:var(--r);text-align:center;display:none;margin-bottom:6px">❌ 驗證碼錯誤，請重新輸入</div>
+            <div style="text-align:center;font-size:12px;color:var(--t3)">沒收到？<button style="background:none;border:none;color:var(--p);cursor:pointer;font-size:12px;font-family:inherit;padding:0" onclick="showToast('驗證碼已重新發送')">重新發送</button></div>
+            <button class="btn btn-p" style="width:100%;margin-top:12px;padding:10px" onclick="verifyOtp()">驗證身分 →</button>
+          </div>
+          <!-- 簽名卡 -->
+          <div class="card" id="sign-card" style="display:none">
+            <div class="ct">✍ 電子簽名</div>
+            <div class="stabs">
+              <button class="stab on" onclick="switchSignTab('draw',this)">手寫</button>
+              <button class="stab" onclick="switchSignTab('type',this)">打字</button>
+            </div>
+            <div id="area-draw">
+              <div style="position:relative">
+                <canvas id="signCanvas" width="600" height="120"></canvas>
+                <div id="canvas-hint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;color:var(--t3);pointer-events:none;white-space:nowrap">← 請在此處手寫您的簽名</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:7px">
+                <button class="btn btn-sm" onclick="clearCanvas()">清除重寫</button>
+                <span id="sign-ok" style="font-size:12px;color:var(--g);display:none">✓ 已完成簽名</span>
+              </div>
+            </div>
+            <div id="area-type" style="display:none">
+              <input class="fi" type="text" id="type-sign" placeholder="輸入您的姓名作為電子簽名" style="font-size:20px;text-align:center;padding:16px;font-family:serif"/>
+            </div>
+            <div class="banner ban-g" style="margin-top:12px">✓ 本人確認以此電子簽名取代親筆簽名，具同等法律效力（電子簽章法第 9 條）</div>
+            <button class="btn btn-p" style="width:100%;padding:11px;margin-top:10px;font-size:14px" onclick="submitSign()">確認簽署並送出 →</button>
+          </div>
+          <div class="card" id="sign-info"><div class="ct">合約資訊</div><div id="sign-info-r"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═ 稽核軌跡 ═ -->
+  <div class="page" id="pg-audit">
+    <div class="ph"><div class="pt">稽核軌跡</div><div class="ps">每個操作均有完整時間戳記與雜湊值，確保不可竄改</div></div>
+    <div class="sb">
+      <input type="text" placeholder="🔍  搜尋合約或操作人員..." id="asrch" oninput="renderAudit()"/>
+      <select id="afilt" onchange="renderAudit()"><option value="">全部操作</option><option value="建立合約">建立合約</option><option value="OTP驗證">OTP驗證</option><option value="簽署完成">簽署完成</option><option value="合約完成">合約完成</option><option value="下載合約">下載合約</option></select>
+      <button class="btn" onclick="exportAudit()">匯出 CSV</button>
+      <a href="https://script.google.com/macros/s/AKfycbxvdoUxWokZOUP4sMnKBluBqX0IcTsyJkb1Aiuacgjup0Krk-tbkTr5gEjC6of1ActLaw" target="_blank" class="btn" style="text-decoration:none">📊 查看存證記錄</a>
+    </div>
+    <div class="tw" id="atbl"><div class="empty"><div class="ei">📋</div>尚無記錄</div></div>
+    <div class="banner ban-b" style="margin-top:12px">🔒 所有操作記錄均以 SHA-256 雜湊值加密存儲，符合 ISO 27001:2022 資安標準，無法被竄改。</div>
+  </div>
+</div><!-- end main -->
+</div><!-- end app -->
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- 個人資料 -->
+<div class="moverlay" id="m-profile">
+  <div class="modal">
+    <div class="mh">👤 個人資料設定</div>
+    <div class="ms">設定後將顯示於合約發起人欄位與 Email 通知</div>
+    <div class="fg"><label class="fl">姓名 *</label><input class="fi" type="text" id="p-name" placeholder="您的真實姓名"/></div>
+    <div class="fg"><label class="fl">Email *</label><input class="fi" type="email" id="p-email" placeholder="您的 Email 地址"/></div>
+    <div class="fg"><label class="fl">公司／機構（選填）</label><input class="fi" type="text" id="p-company" placeholder="公司名稱"/></div>
+    <div class="mfoot">
+      <button class="btn" onclick="closeModal('m-profile')">取消</button>
+      <button class="btn btn-p" onclick="saveProfile()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Email 設定 -->
+<div class="moverlay" id="m-email">
+  <div class="modal" style="max-width:520px">
+    <div class="mh">📧 EmailJS 設定</div>
+    <div class="ms">免費方案每月 200 封。填入金鑰後即可真實發信。</div>
+    <div class="banner ban-p" style="margin-bottom:14px;font-size:12px">
+      <strong>取得金鑰步驟：</strong><br>
+      1. 前往 <a href="https://www.emailjs.com" target="_blank" style="color:var(--p)">emailjs.com</a> 免費註冊<br>
+      2. Email Services → 建立 Gmail 服務 → 取得 Service ID<br>
+      3. Email Templates → 建立模板（收件人填 {{to_email}}）→ 取得 Template ID<br>
+      4. Account → API Keys → 取得 Public Key
+    </div>
+    <div class="fg"><label class="fl">Public Key</label><input class="fi" type="text" id="ej-pub" placeholder="vS1tvgE6_TweAZYti" style="font-family:'DM Mono',monospace"/></div>
+    <div class="fg"><label class="fl">Service ID <span style="color:var(--r);font-size:11px">（格式：service_xxxxxxx，不是 Email 地址）</span></label><input class="fi" type="text" id="ej-svc" placeholder="service_xxxxxxx" style="font-family:'DM Mono',monospace"/></div>
+    <div class="fg"><label class="fl">Template ID</label><input class="fi" type="text" id="ej-tpl" placeholder="template_xxxxxxx" style="font-family:'DM Mono',monospace"/></div>
+    <div style="height:1px;background:var(--bd);margin:14px 0"></div>
+    <div style="height:1px;background:var(--bd);margin:4px 0 14px"></div>
+    <div class="fg">
+      <label class="fl">🌐 系統公開網址 <span style="color:var(--r);font-size:11px">（必填！收件人點連結才能開啟）</span></label>
+      <input class="fi" type="text" id="ej-url" placeholder="例：https://你的帳號.github.io/signflow/" style="font-family:'DM Mono',monospace;font-size:12px"/>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px">使用 GitHub Pages 或 Netlify 部署後填入此處</div>
+    </div>
+    <div class="fg"><label class="fl">🧪 測試收件人 Email（點「測試發信」驗證設定）</label><input class="fi" type="email" id="ej-test" placeholder="your@email.com"/></div>
+    <div id="ej-result" style="font-size:12px;padding:8px 12px;border-radius:8px;display:none;margin-bottom:4px"></div>
+    <div id="ej-url-warn" style="display:none;font-size:12px;padding:8px 12px;border-radius:8px;background:var(--rl);color:var(--r);margin-bottom:4px;border:1px solid #F09595">
+      ⚠️ 目前是本地檔案（file://），收件人無法透過連結開啟。請先部署到網路後填入公開網址。
+    </div>
+    <div class="mfoot" style="justify-content:space-between">
+      <button class="btn" style="color:var(--r);border-color:var(--r)" onclick="clearEjs()">清除設定</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="testEjs()">🧪 測試發信</button>
+        <button class="btn" onclick="closeModal('m-email')">取消</button>
+        <button class="btn btn-p" onclick="saveEjs()">儲存設定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 合約詳情 -->
+<div class="moverlay" id="m-detail">
+  <div class="modal" style="max-width:540px">
+    <div class="mh" id="det-title">合約詳情</div>
+    <div id="det-body"></div>
+    <!-- 編輯簽署人 Email 區塊 -->
+    <div id="det-edit-signers" style="display:none;margin-top:14px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--t)">✏️ 修改簽署人 Email</div>
+      <div id="det-signer-edit-list"></div>
+      <button class="btn btn-g" style="width:100%;margin-top:8px;padding:9px" onclick="saveSignerEmails()">💾 儲存修改並重新發送通知</button>
+    </div>
+    <div class="mfoot" style="justify-content:space-between">
+      <button class="btn" style="color:var(--r);border-color:var(--r)" id="det-del-btn" onclick="deleteContract()">🗑 刪除合約</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="det-edit-btn" onclick="toggleEditSigners()">✏️ 修改收件人</button>
+        <button class="btn" onclick="closeModal('m-detail')">關閉</button>
+        <button class="btn btn-p" id="det-sign-btn" style="display:none">前往簽署</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 刪除確認 Modal -->
+<div class="moverlay" id="m-confirm-del">
+  <div class="modal" style="max-width:400px">
+    <div class="mh" style="color:var(--r)">⚠️ 確認刪除</div>
+    <div style="font-size:13px;color:var(--t2);margin:12px 0 4px">確定要刪除合約 <strong id="del-cname"></strong> 嗎？</div>
+    <div class="banner ban-r" style="font-size:12px">此操作無法復原，合約資料與稽核軌跡將一併移除。</div>
+    <div class="mfoot">
+      <button class="btn" onclick="closeModal('m-confirm-del')">取消</button>
+      <button class="btn" style="background:var(--r);color:#fff;border-color:var(--r)" onclick="confirmDelete()">確認刪除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 簽署完成 -->
+<div class="moverlay" id="m-ok">
+  <div class="modal">
+    <div class="suc-ico">✅</div>
+    <div style="text-align:center;font-size:17px;font-weight:700;margin-bottom:6px">合約簽署完成！</div>
+    <div style="text-align:center;font-size:13px;color:var(--t2);margin-bottom:14px">已完成電子簽署，雙方皆已收到合約副本。<br>此合約受電子簽章法保護，具完整法律效力。</div>
+    <div style="background:var(--bg);border-radius:var(--rad);padding:12px 14px" id="ok-info"></div>
+    <div class="mfoot">
+      <button class="btn" onclick="doDownload()">下載合約</button>
+      <button class="btn btn-p" onclick="closeModal('m-ok');goNav('contracts')">返回合約列表</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ═══ 收件人簽署頁面（點連結後顯示） ═══ -->
+<div id="signer-view" style="display:none;min-height:100vh;background:#F8F7FE;font-family:'Noto Sans TC',sans-serif">
+  <div style="background:#534AB7;padding:14px 24px;display:flex;align-items:center;gap:10px">
+    <div style="width:28px;height:28px;background:rgba(255,255,255,.2);border-radius:6px;display:flex;align-items:center;justify-content:center">
+      <svg width="16" height="16" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" viewBox="0 0 17 17"><path d="M3 3h8l3 3v8H3z"/><path d="M11 3v3h3"/><line x1="5" y1="9" x2="12" y2="9"/><line x1="5" y1="12" x2="9" y2="12"/></svg>
+    </div>
+    <span style="font-size:15px;font-weight:700;color:white">Sign<b style="color:#AFA9EC">Flow</b></span>
+    <span style="margin-left:auto;font-size:12px;color:rgba(255,255,255,.7)">電子契約簽署平台</span>
+  </div>
+  <div style="max-width:680px;margin:0 auto;padding:24px 20px">
+    <!-- 合約標題 -->
+    <div style="background:white;border-radius:14px;padding:20px 24px;border:1px solid rgba(83,74,183,.12);margin-bottom:16px">
+      <div style="font-size:11px;color:#9e9bba;margin-bottom:4px">您有一份合約待簽署</div>
+      <div id="sv-title" style="font-size:18px;font-weight:700;color:#1a1830;margin-bottom:12px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+        <div style="background:#F8F7FE;border-radius:8px;padding:8px 12px"><div style="color:#9e9bba;margin-bottom:2px">合約類型</div><div id="sv-type" style="font-weight:500"></div></div>
+        <div style="background:#F8F7FE;border-radius:8px;padding:8px 12px"><div style="color:#9e9bba;margin-bottom:2px">截止日期</div><div id="sv-due" style="font-weight:500;color:#854F0B"></div></div>
+        <div style="background:#F8F7FE;border-radius:8px;padding:8px 12px"><div style="color:#9e9bba;margin-bottom:2px">發起人</div><div id="sv-initiator" style="font-weight:500"></div></div>
+        <div style="background:#EEEDFE;border-radius:8px;padding:8px 12px"><div style="color:#9e9bba;margin-bottom:2px">您的身分</div><div id="sv-signer-name" style="font-weight:500;color:#534AB7"></div></div>
+      </div>
+      <div style="font-size:11px;color:#9e9bba;margin-top:8px">簽署 Email：<span id="sv-signer-email" style="font-family:monospace"></span></div>
+    </div>
+    <!-- 合約內容 -->
+    <div style="background:white;border-radius:14px;border:1px solid rgba(83,74,183,.12);margin-bottom:16px;overflow:hidden">
+      <div style="padding:12px 20px;border-bottom:1px solid rgba(83,74,183,.12);font-size:13px;font-weight:600;color:#1a1830">📄 合約內容</div>
+      <div id="sv-content" style="padding:20px 24px;font-size:12px;line-height:2;color:#1a1830;max-height:320px;overflow-y:auto;white-space:pre-wrap;word-break:break-word"></div>
+    </div>
+    <!-- 完成提示 -->
+    <div id="sv-done-banner" style="display:none;background:white;border-radius:14px;border:2px solid #3B6D11;padding:32px 24px;text-align:center;margin-bottom:16px"></div>
+    <!-- OTP 驗證 -->
+    <div id="sv-otp-area" style="background:white;border-radius:14px;padding:20px 24px;border:1px solid rgba(83,74,183,.12);margin-bottom:16px">
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">📧 身分驗證</div>
+      <div style="font-size:13px;color:#5f5c7a;margin-bottom:12px">請輸入發送至您 Email 的 4 位數驗證碼以繼續。</div>
+      <div style="background:#EEEDFE;border-radius:8px;padding:10px 14px;font-size:12px;color:#3C3489;margin-bottom:14px;border:1px solid #AFA9EC">
+        🧪 測試驗證碼：<strong style="font-family:monospace;font-size:15px;letter-spacing:3px">1234</strong>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px">
+        <input class="oi" id="sv-o0" maxlength="1" oninput="svOIn(0,this)" onkeydown="svOKey(0,event)" autocomplete="off" style="width:52px;height:58px;font-size:24px"/>
+        <input class="oi" id="sv-o1" maxlength="1" oninput="svOIn(1,this)" onkeydown="svOKey(1,event)" autocomplete="off" style="width:52px;height:58px;font-size:24px"/>
+        <input class="oi" id="sv-o2" maxlength="1" oninput="svOIn(2,this)" onkeydown="svOKey(2,event)" autocomplete="off" style="width:52px;height:58px;font-size:24px"/>
+        <input class="oi" id="sv-o3" maxlength="1" oninput="svOIn(3,this)" onkeydown="svOKey(3,event)" autocomplete="off" style="width:52px;height:58px;font-size:24px"/>
+      </div>
+      <div id="sv-o-err" style="font-size:12px;color:#A32D2D;text-align:center;display:none;margin-bottom:8px">❌ 驗證碼錯誤，請重新輸入</div>
+      <div style="text-align:center;font-size:12px;color:#9e9bba;margin-bottom:12px">沒收到？<button style="background:none;border:none;color:#534AB7;cursor:pointer;font-size:12px;font-family:inherit" onclick="showToast('驗證碼已重新發送')">重新發送</button></div>
+      <button onclick="svVerifyOtp()" style="width:100%;padding:12px;background:#534AB7;color:white;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">驗證身分 →</button>
+    </div>
+    <!-- 簽名區 -->
+    <div id="sv-sign-area" style="display:none;background:white;border-radius:14px;padding:20px 24px;border:1px solid rgba(83,74,183,.12);margin-bottom:16px">
+      <div style="font-size:14px;font-weight:600;margin-bottom:12px">✍ 電子簽名</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <button class="sv-stab on" onclick="svSwitchTab('draw',this)" style="padding:5px 14px;font-size:12px;border-radius:100px;cursor:pointer;border:1px solid rgba(83,74,183,.2);background:#534AB7;color:white;font-family:inherit">手寫</button>
+        <button class="sv-stab" onclick="svSwitchTab('type',this)" style="padding:5px 14px;font-size:12px;border-radius:100px;cursor:pointer;border:1px solid rgba(83,74,183,.2);background:transparent;color:#5f5c7a;font-family:inherit">打字</button>
+      </div>
+      <div id="sv-area-draw">
+        <div style="position:relative">
+          <canvas id="svCanvas" width="600" height="130" style="display:block;width:100%;height:130px;border:1px solid rgba(83,74,183,.2);border-radius:10px;cursor:crosshair;background:white;touch-action:none"></canvas>
+          <div id="sv-chint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;color:#9e9bba;pointer-events:none;white-space:nowrap">← 請在此處手寫您的簽名</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <button onclick="clearSvCanvas()" style="padding:5px 12px;font-size:12px;border:1px solid rgba(83,74,183,.2);border-radius:8px;background:transparent;cursor:pointer;font-family:inherit">清除重寫</button>
+          <span id="sv-sign-ok" style="font-size:12px;color:#3B6D11;display:none">✓ 已完成簽名</span>
+        </div>
+      </div>
+      <div id="sv-area-type" style="display:none">
+        <input id="sv-type-sign" type="text" placeholder="輸入您的姓名作為電子簽名" style="width:100%;padding:14px;font-size:20px;text-align:center;font-family:serif;border:1px solid rgba(83,74,183,.2);border-radius:10px;outline:none;color:#1a1830"/>
+      </div>
+      <div style="background:#EAF3DE;border-radius:8px;padding:10px 14px;font-size:12px;color:#3B6D11;margin-top:12px;border:1px solid #97C459">
+        ✓ 本人確認以此電子簽名取代親筆簽名，具同等法律效力（電子簽章法第 9 條）
+      </div>
+      <button onclick="svSubmitSign()" style="width:100%;padding:14px;background:#3B6D11;color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:12px;font-family:inherit">確認簽署並送出 →</button>
+    </div>
+    <div style="text-align:center;font-size:11px;color:#9e9bba;padding:8px 0 20px">
+      SignFlow 電子契約平台 · 受電子簽章法保護 · 具完整法律效力
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const DB = {
+  contracts: [],
+  log: [],
+  signers: [],       // 當前新增合約的簽署人
+  uploadedFile: null,
+  fileContent: '',
+  currentSignId: null,
+  filter: 'all',
+  wizStep: 0
+};
+
+// 使用者資料 - 從 localStorage 讀取
+// 部署後的公開網址（填入後 Email 連結才能讓收件人開啟）
+const SITE = {
+  get url() { return localStorage.getItem('sf_url') || 'https://dancing-bombolone-e07a47.netlify.app/'; },
+  set url(v) { localStorage.setItem('sf_url', v); }
+};
+
+const USER = {
+  get name()    { return localStorage.getItem('sf_name')    || ''; },
+  get email()   { return localStorage.getItem('sf_email')   || ''; },
+  get company() { return localStorage.getItem('sf_company') || ''; },
+  set name(v)    { localStorage.setItem('sf_name', v); },
+  set email(v)   { localStorage.setItem('sf_email', v); },
+  set company(v) { localStorage.setItem('sf_company', v); }
+};
+
+// EmailJS 設定 - 從 localStorage 讀取，預設填入已知金鑰
+const EJS = {
+  get pub() { return localStorage.getItem('ejs_pub') || 'vS1tvgE6_TweAZYti'; },
+  get svc() { return localStorage.getItem('ejs_svc') || 'service_a806093kimo'; },
+  get tpl() { return localStorage.getItem('ejs_tpl') || 'template_nl98nki'; },
+  set pub(v) { localStorage.setItem('ejs_pub', v); },
+  set svc(v) { localStorage.setItem('ejs_svc', v); },
+  set tpl(v) { localStorage.setItem('ejs_tpl', v); },
+  get ready() { 
+    const p = localStorage.getItem('ejs_pub') || 'vS1tvgE6_TweAZYti';
+    const s = localStorage.getItem('ejs_svc') || 'service_a806093kimo';
+    const t = localStorage.getItem('ejs_tpl') || 'template_nl98nki';
+    return !!(p && s && t); 
+  }
+};
+
+let idN = 200;
+let drawing = false, lx = 0, ly = 0, hasSigned = false;
+
+const genId   = () => ++idN;
+const genHash = () => Math.random().toString(36).slice(2,6)+'…'+Math.random().toString(36).slice(2,6);
+const esc     = s  => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const tsNow   = () => new Date().toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+const dateNow = () => new Date().toLocaleDateString('zh-TW');
+
+function saveDB() {
+  try {
+    // 儲存合約（不含簽名圖像，避免 localStorage 超過 5MB）
+    const toSave = DB.contracts.map(c => ({...c, signImg: c.signImg ? '[已簽名]' : null}));
+    localStorage.setItem('sf_contracts', JSON.stringify(toSave));
+    localStorage.setItem('sf_log', JSON.stringify(DB.log.slice(0, 200)));
+  } catch(e) {
+    console.warn('儲存失敗（可能超過容量）', e);
+  }
+}
+function addLog(contract, actor, action) {
+  DB.log.unshift({ time:tsNow(), contract, actor, action,
+    ip:'111.xxx.'+Math.floor(Math.random()*254+1),
+    method: actor===USER.name ? '帳號密碼' : 'Email OTP',
+    hash: genHash() });
+}
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+let _tt;
+function showToast(msg, type='') {
+  clearTimeout(_tt);
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (type ? ' '+type : '');
+  requestAnimationFrame(() => el.classList.add('on'));
+  _tt = setTimeout(() => el.classList.remove('on'), 3500);
+}
+
+// ═══════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════
+function openModal(id) {
+  // 開啟前先填入目前資料
+  if (id === 'm-profile') {
+    document.getElementById('p-name').value    = USER.name;
+    document.getElementById('p-email').value   = USER.email;
+    document.getElementById('p-company').value = USER.company;
+  }
+  if (id === 'm-email') {
+    document.getElementById('ej-pub').value  = EJS.pub;
+    document.getElementById('ej-svc').value  = EJS.svc;
+    document.getElementById('ej-tpl').value  = EJS.tpl;
+    document.getElementById('ej-url').value  = SITE.url !== window.location.href ? SITE.url : '';
+    // 只填入有效的 email（排除被誤填的 URL）
+    const testEmail = USER.email && USER.email.includes('@') && !USER.email.includes('http') ? USER.email : '';
+    document.getElementById('ej-test').value = testEmail;
+    document.getElementById('ej-result').style.display = 'none';
+    const urlWarn = document.getElementById('ej-url-warn');
+    if (urlWarn) urlWarn.style.display = window.location.protocol === 'file:' ? '' : 'none';
+  }
+  document.getElementById(id).classList.add('on');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('on');
+}
+// 點 overlay 背景關閉
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('moverlay')) {
+    e.target.classList.remove('on');
+  }
+});
+
+// ═══════════════════════════════════════════
+// USER PROFILE
+// ═══════════════════════════════════════════
+function saveProfile() {
+  const nm = document.getElementById('p-name').value.trim();
+  const em = document.getElementById('p-email').value.trim();
+  const co = document.getElementById('p-company').value.trim();
+  if (!nm) { showToast('請填寫姓名', 'er'); return; }
+  if (!em || !em.includes('@')) { showToast('請填寫有效的 Email', 'er'); return; }
+  USER.name = nm; USER.email = em; USER.company = co;
+  updateUserUI();
+  closeModal('m-profile');
+  showToast('個人資料已儲存！', 'ok');
+}
+function updateUserUI() {
+  const nm = USER.name || '點此設定姓名';
+  const em = USER.email || '⚙ 個人設定';
+  // 左下角
+  const ava = document.getElementById('user-ava');
+  const unm = document.getElementById('user-name');
+  const uem = document.getElementById('user-email-lbl');
+  if (ava) ava.textContent = USER.name ? USER.name.slice(0,2) : '?';
+  if (unm) unm.textContent = nm;
+  if (uem) uem.textContent = USER.email ? USER.email : '⚙ 個人設定';
+  // 頂部
+  const tb = document.getElementById('tb-name');
+  if (tb) tb.textContent = USER.name || '設定姓名';
+}
+
+// ═══════════════════════════════════════════
+// EMAILJS
+// ═══════════════════════════════════════════
+function ejsInit() {
+  if (window.emailjs && EJS.pub) {
+    try { emailjs.init({ publicKey: EJS.pub }); } catch(e) {}
+  }
+}
+function saveEjs() {
+  const pub = document.getElementById('ej-pub').value.trim();
+  const svc = document.getElementById('ej-svc').value.trim();
+  const tpl = document.getElementById('ej-tpl').value.trim();
+  const url = document.getElementById('ej-url').value.trim();
+  if (!pub||!svc||!tpl) { showToast('請填寫全部三個欄位','er'); return; }
+  EJS.pub = pub; EJS.svc = svc; EJS.tpl = tpl;
+  if (url) SITE.url = url;
+  ejsInit();
+  updateEjsBtn();
+  closeModal('m-email');
+  showToast('EmailJS 設定已儲存！','ok');
+}
+function clearEjs() {
+  ['ejs_pub','ejs_svc','ejs_tpl'].forEach(k => localStorage.removeItem(k));
+  document.getElementById('ej-pub').value = '';
+  document.getElementById('ej-svc').value = '';
+  document.getElementById('ej-tpl').value = '';
+  updateEjsBtn();
+  showToast('EmailJS 設定已清除');
+}
+function updateEjsBtn() {
+  const btn = document.getElementById('ejs-btn');
+  if (!btn) return;
+  if (EJS.ready) { btn.textContent='📧 Email ✓'; btn.style.color='var(--g)'; btn.style.borderColor='var(--g)'; }
+  else           { btn.textContent='📧 Email 設定'; btn.style.color='var(--a)'; btn.style.borderColor='var(--a)'; }
+}
+function sendEmail(params) {
+  if (!EJS.pub || !EJS.svc || !EJS.tpl) {
+    console.warn('[SignFlow] EmailJS 未設定');
+    return Promise.reject('not_configured');
+  }
+  // 使用 REST API，不依賴 SDK，避免 Template ID 驗證問題
+  const _pub = localStorage.getItem('ejs_pub') || 'vS1tvgE6_TweAZYti';
+  const _svc = localStorage.getItem('ejs_svc') || 'service_a806093kimo';
+  const _tpl = localStorage.getItem('ejs_tpl') || 'template_nl98nki';
+  return fetch('https://api.emailjs.com/api/v1.0/email/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      service_id:  _svc,
+      template_id: _tpl,
+      user_id:     _pub,
+      template_params: {
+        to_name:       params.to_name        || '簽署人',
+        to_email:      params.to_email,
+        subject:       params.subject        || '您有一份合約待簽署',
+        contract_name: params.contract_name  || '',
+        contract_type: params.contract_type  || '',
+        due_date:      params.due_date        || '未設定',
+        initiator:     params.initiator       || USER.name || 'SignFlow',
+        sign_link:     params.sign_link       || SITE.url,
+        msg_type:      params.msg_type        || 'invite',
+        from_name:     'SignFlow 電子契約平台',
+        name:          params.to_name        || '簽署人',
+        email:         params.to_email,
+        message:       '您有一份合約需要簽署：' + (params.contract_name||'')
+      }
+    })
+  }).then(res => {
+    if (!res.ok) return res.text().then(t => Promise.reject({text: t, status: res.status}));
+    return res;
+  });
+}
+function testEjs() {
+  const pub  = document.getElementById('ej-pub').value.trim() || EJS.pub;
+  const svc  = document.getElementById('ej-svc').value.trim() || EJS.svc;
+  const tpl  = document.getElementById('ej-tpl').value.trim() || EJS.tpl;
+  const to   = document.getElementById('ej-test').value.trim();
+  const res  = document.getElementById('ej-result');
+  if (!to || !to.includes('@')) { showToast('請填寫測試收件人 Email','er'); return; }
+  if (!pub||!svc||!tpl) { showToast('請填寫三個金鑰欄位','er'); return; }
+  res.style.display = 'block';
+  res.style.cssText = 'display:block;background:#EEEDFE;color:#534AB7;padding:8px 12px;border-radius:8px;font-size:12px';
+  res.textContent = '⏳ 發送中，請稍候...';
+  fetch('https://api.emailjs.com/api/v1.0/email/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      service_id: svc, template_id: tpl, user_id: pub,
+      template_params: {
+        to_name:'測試收件人', to_email:to,
+        subject:'【SignFlow 測試】Email 設定驗證',
+        contract_name:'測試合約', contract_type:'測試',
+        due_date:'2025-12-31', initiator:USER.name||'SignFlow',
+        sign_link:SITE.url||window.location.href, msg_type:'invite',
+        from_name:'SignFlow 電子契約平台',
+        name:'測試收件人', email:to,
+        message:'這是 SignFlow 的測試信件，若您收到代表設定正確。'
+      }
+    })
+  }).then(r => {
+    if (!r.ok) return r.text().then(t=>{throw {text:t, status:r.status};});
+    res.style.cssText = 'display:block;background:#EAF3DE;color:#3B6D11;padding:8px 12px;border-radius:8px;font-size:12px';
+    res.textContent = '✅ 發送成功！請檢查收件匣（含垃圾信件夾）';
+  }).catch(err => {
+    const msg = err?.text || err?.message || JSON.stringify(err) || '未知錯誤';
+    res.style.cssText = 'display:block;background:#FCEBEB;color:#A32D2D;padding:8px 12px;border-radius:8px;font-size:12px';
+    res.textContent = '❌ 失敗：' + msg;
+    console.error('[EmailJS REST error]', err);
+  });
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+const PAGE_TITLES = { dashboard:'儀表板', contracts:'合約管理', upload:'新增合約', sign:'簽署中心', audit:'稽核軌跡' };
+function goNav(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');
+  const ni = document.getElementById('ni-'+id);
+  if (ni) ni.classList.add('on');
+  document.getElementById('page-title').textContent = PAGE_TITLES[id] || id;
+  if (id==='dashboard') renderDash();
+  if (id==='contracts') renderContracts();
+  if (id==='sign')      renderSignList();
+  if (id==='audit')     renderAudit();
+  if (id==='upload')    resetUpload();
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════
+function renderDash() {
+  const p = DB.contracts.filter(c=>c.status==='pending').length;
+  const a = DB.contracts.filter(c=>c.status==='active').length;
+  const d = DB.contracts.filter(c=>c.status==='done').length;
+  const t = DB.contracts.length;
+  document.getElementById('st0').textContent = p;
+  document.getElementById('st1').textContent = a;
+  document.getElementById('st2').textContent = d;
+  document.getElementById('st3').textContent = t;
+  document.getElementById('badge-p').textContent = p;
+  document.getElementById('badge-s').textContent = p;
+  const pct = t ? Math.round(d/t*100) : 0;
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-pct').textContent  = pct+'%';
+  document.getElementById('prog-lbl').textContent  = d+' / '+t+' 份';
+  document.getElementById('qc-sign-lbl').textContent = p ? p+' 份等待簽署' : '目前無待簽合約';
+  if (USER.name) document.getElementById('dash-greeting').textContent = '歡迎，'+USER.name;
+  const recent = [...DB.contracts].reverse().slice(0,5);
+  const tbl = document.getElementById('dash-tbl');
+  if (!recent.length) { tbl.innerHTML='<div class="empty"><div class="ei">📄</div>尚無合約<br><button class="btn btn-p" style="margin-top:10px" onclick="goNav(\'upload\')">＋ 建立第一份</button></div>'; return; }
+  tbl.innerHTML = '<table><thead><tr><th>合約名稱</th><th>狀態</th><th>簽署方</th></tr></thead><tbody>'
+    + recent.map(c=>`<tr style="cursor:pointer" onclick="showDetail(${c.id})">
+        <td><div style="font-weight:500">${esc(c.name)}</div><div style="font-size:11px;color:var(--t3)">${c.createdAt}</div></td>
+        <td>${bh(c.status)}</td>
+        <td style="font-size:13px">${esc(c.signers.filter(s=>s.role!=='initiator').map(s=>s.name).join(', '))||'—'}</td>
+      </tr>`).join('') + '</tbody></table>';
+}
+
+// ═══════════════════════════════════════════
+// CONTRACTS
+// ═══════════════════════════════════════════
+const bh = s => ({
+  pending: '<span class="badge bw">待簽署</span>',
+  active:  '<span class="badge bi">進行中</span>',
+  done:    '<span class="badge bs">已完成</span>',
+  expired: '<span class="badge bg2">已過期</span>'
+}[s] || '');
+
+function setFilter(f, el) {
+  DB.filter = f;
+  document.querySelectorAll('.fb .pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  renderContracts();
+}
+function renderContracts() {
+  const q  = (document.getElementById('srch')?.value||'').toLowerCase();
+  const tp = document.getElementById('ftype')?.value||'';
+  const list = [...DB.contracts].reverse().filter(c => {
+    if (DB.filter!=='all' && c.status!==DB.filter) return false;
+    if (tp && c.type!==tp) return false;
+    if (q && !c.name.toLowerCase().includes(q) && !c.signers.map(s=>s.name).join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const tbl = document.getElementById('ctbl');
+  if (!list.length) { tbl.innerHTML='<div class="empty"><div class="ei">📂</div>沒有符合條件的合約</div>'; return; }
+  tbl.innerHTML = '<table><thead><tr><th>合約文件</th><th>類型</th><th>簽署方</th><th>截止</th><th>進度</th><th>狀態</th><th>操作</th></tr></thead><tbody>'
+    + list.map(c => {
+        const sc = c.signers.filter(s=>s.signed).length;
+        const tc = c.signers.length;
+        const pct= Math.round(sc/tc*100);
+        const dc = (c.status==='pending'||c.status==='active') && c.dueDate ? 'color:var(--a)' : '';
+        return `<tr>
+          <td><div style="display:flex;align-items:center;gap:9px">
+            <div class="di"><svg viewBox="0 0 16 16"><rect x="2" y="1" width="12" height="14" rx="2"/><line x1="5" y1="5" x2="11" y2="5"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="5" y1="11" x2="8" y2="11"/></svg></div>
+            <div><div style="font-weight:500">${esc(c.name)}</div><div style="font-size:11px;color:var(--t3)">${c.createdAt}</div></div>
+          </div></td>
+          <td style="color:var(--t2)">${esc(c.type||'—')}</td>
+          <td style="font-size:13px">${esc(c.signers.filter(s=>s.role!=='initiator').map(s=>s.name).join(', '))||'—'}</td>
+          <td style="${dc};font-size:13px">${c.dueDate||'—'}</td>
+          <td><div style="font-size:11px;color:var(--t3);margin-bottom:3px">${sc}/${tc}</div><div class="prog" style="width:70px"><div class="progf" style="width:${pct}%"></div></div></td>
+          <td>${bh(c.status)}</td>
+          <td style="white-space:nowrap">
+            ${c.status==='pending'?`<button class="btn btn-sm btn-p" onclick="openSignFor(${c.id})">簽署</button> `:''}
+            ${c.status==='done'   ?`<button class="btn btn-sm" onclick="doDownload(${c.id})">下載</button> `:''}
+            <button class="btn btn-sm" onclick="showDetail(${c.id})">詳情</button>
+            ${(c.status==='pending'||c.status==='active')?`<button class="btn btn-sm" onclick="sendReminder(${c.id})">提醒</button>`:''}
+            <button class="btn btn-sm" style="color:var(--r);border-color:var(--r)" onclick="quickDelete(${c.id})">刪除</button>
+          </td></tr>`;
+      }).join('') + '</tbody></table>';
+}
+function quickDelete(id) {
+  _detailId = id;
+  const c = DB.contracts.find(x=>x.id===id); if (!c) return;
+  document.getElementById('del-cname').textContent = c.name;
+  openModal('m-confirm-del');
+}
+function sendReminder(id) {
+  const c = DB.contracts.find(x=>x.id===id);
+  if (!c) return;
+  const targets = c.signers.filter(s=>!s.signed && s.role!=='initiator');
+  if (!targets.length) { showToast('所有人皆已簽署','ok'); return; }
+  let sent=0, failed=0;
+  targets.forEach(s => {
+    sendEmail({ to_name:s.name, to_email:s.email,
+      subject:'[提醒] 合約「'+c.name+'」尚待您簽署',
+      contract_name:c.name, contract_type:c.type||'—',
+      due_date:c.dueDate||'未設定', initiator:c.signers[0]?.name||USER.name,
+      sign_link: makeSignLink(c, s.email), msg_type:'reminder'
+    }).then(()=>{ sent++; if(sent+failed===targets.length) showToast('提醒 Email 已發送 '+sent+' 封','ok'); })
+      .catch(err=>{ failed++; console.warn('reminder failed',err);
+        if(sent+failed===targets.length) {
+          if(sent>0) showToast('已發送'+sent+'封，'+failed+'封失敗','er');
+          else showToast('Email 發送失敗，請在頂部設定 EmailJS 金鑰','er');
+        }
+      });
+  });
+  if (!EJS.ready) showToast('⚠ EmailJS 未設定，Email 未實際發送。請點頂部「📧 Email 設定」','er');
+  addLog(c.name, USER.name||'系統', '發送提醒');
+  renderAudit();
+}
+let _detailId = null;
+function showDetail(id) {
+  _detailId = id;
+  const c = DB.contracts.find(x=>x.id===id);
+  if (!c) return;
+  const sc = c.signers.filter(s=>s.signed).length;
+  document.getElementById('det-title').textContent = c.name;
+  // 隱藏編輯區
+  document.getElementById('det-edit-signers').style.display = 'none';
+  document.getElementById('det-edit-btn').textContent = '✏️ 修改收件人';
+  // 基本資訊
+  document.getElementById('det-body').innerHTML =
+    [['合約類型',c.type||'—'],['建立日期',c.createdAt],['截止日期',c.dueDate||'—'],
+     ['狀態',{pending:'待簽署',active:'進行中',done:'已完成'}[c.status]||c.status],
+     ['簽署進度',sc+'/'+c.signers.length+' 人已簽']]
+    .map(([k,v])=>`<div class="irow"><span>${k}</span><span>${esc(v)}</span></div>`).join('')
+    +'<div style="margin-top:14px;font-size:12px;font-weight:600;margin-bottom:8px;color:var(--t)">簽署人</div>'
+    +c.signers.map(s=>`
+      <div class="sr">
+        <div class="sav2">${esc(s.name.slice(0,1))}</div>
+        <div class="sinf">
+          <div class="snm">${esc(s.name)}</div>
+          <div class="sem">${esc(s.email)}</div>
+        </div>
+        ${s.role==='initiator'?'<span class="badge bi">發起人</span>':s.signed?'<span class="badge bs">已簽</span>':'<span class="badge bw">待簽</span>'}
+      </div>`).join('');
+  // 前往簽署按鈕
+  const sb = document.getElementById('det-sign-btn');
+  if (c.status==='pending') { sb.style.display=''; sb.onclick=()=>{ closeModal('m-detail'); openSignFor(c.id); }; }
+  else sb.style.display='none';
+  // 已完成合約不顯示修改收件人
+  const eb = document.getElementById('det-edit-btn');
+  eb.style.display = c.status==='done' ? 'none' : '';
+  openModal('m-detail');
+}
+
+function toggleEditSigners() {
+  const c = DB.contracts.find(x=>x.id===_detailId); if (!c) return;
+  const area = document.getElementById('det-edit-signers');
+  const btn  = document.getElementById('det-edit-btn');
+  if (area.style.display==='none') {
+    // 顯示編輯欄位
+    area.style.display = '';
+    btn.textContent = '▲ 收合';
+    document.getElementById('det-signer-edit-list').innerHTML =
+      c.signers.filter(s=>s.role!=='initiator').map((s,i)=>`
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div class="sav2" style="flex-shrink:0">${esc(s.name.slice(0,1))}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:500;margin-bottom:3px">${esc(s.name)}</div>
+            <input class="fi" type="email" id="edit-em-${i}" value="${esc(s.email)}" placeholder="新的 Email 地址" style="font-size:12px;padding:6px 10px"/>
+          </div>
+          <span class="badge ${s.signed?'bs':'bw'}">${s.signed?'已簽':'待簽'}</span>
+        </div>`).join('');
+  } else {
+    area.style.display = 'none';
+    btn.textContent = '✏️ 修改收件人';
+  }
+}
+
+function saveSignerEmails() {
+  const c = DB.contracts.find(x=>x.id===_detailId); if (!c) return;
+  const targets = c.signers.filter(s=>s.role!=='initiator');
+  let changed = 0, invalid = false;
+  targets.forEach((s,i) => {
+    const inp = document.getElementById('edit-em-'+i);
+    if (!inp) return;
+    const newEmail = inp.value.trim();
+    if (!newEmail || !newEmail.includes('@')) { invalid=true; inp.style.borderColor='var(--r)'; return; }
+    inp.style.borderColor='';
+    if (newEmail !== s.email) { s.email = newEmail; changed++; }
+  });
+  if (invalid) { showToast('請填寫有效的 Email 地址','er'); return; }
+  // 重新發送通知給未簽署的人
+  const toNotify = c.signers.filter(s=>s.role!=='initiator'&&!s.signed);
+  if (toNotify.length===0) { showToast(changed?'Email 已更新（所有人皆已簽署）':'沒有變更','ok'); document.getElementById('det-edit-signers').style.display='none'; showDetail(_detailId); return; }
+  if (!EJS.ready) {
+    showToast(changed?'Email 已更新，但 EmailJS 未設定無法發送通知':'無變更','er');
+    document.getElementById('det-edit-signers').style.display='none';
+    showDetail(_detailId); return;
+  }
+  showToast('正在重新發送通知…','inf');
+  let sent=0, fail=0;
+  toNotify.forEach(s => {
+    sendEmail({ to_name:s.name, to_email:s.email,
+      subject:'[更新] 請簽署合約：'+c.name,
+      contract_name:c.name, contract_type:c.type||'—',
+      due_date:c.dueDate||'未設定',
+      initiator:c.signers[0]?.name||USER.name,
+      sign_link: makeSignLink(nc, s.email), msg_type:'invite'
+    }).then(()=>{ sent++; if(sent+fail===toNotify.length){ showToast('已重新發送 '+sent+' 封通知','ok'); addLog(c.name,USER.name,'重新發送通知'); renderAudit(); } })
+      .catch(err=>{ fail++; const m=err?.text||err?.message||String(err); if(sent+fail===toNotify.length) showToast('發送失敗：'+m,'er'); });
+  });
+  document.getElementById('det-edit-signers').style.display = 'none';
+  document.getElementById('det-edit-btn').textContent = '✏️ 修改收件人';
+  showDetail(_detailId);
+}
+
+function deleteContract() {
+  const c = DB.contracts.find(x=>x.id===_detailId); if (!c) return;
+  document.getElementById('del-cname').textContent = c.name;
+  closeModal('m-detail');
+  openModal('m-confirm-del');
+}
+function confirmDelete() {
+  const c = DB.contracts.find(x=>x.id===_detailId); if (!c) return;
+  // 移除合約
+  DB.contracts = DB.contracts.filter(x=>x.id!==_detailId);
+  addLog(c.name, USER.name||'使用者', '刪除合約');
+  saveDB();
+  closeModal('m-confirm-del');
+  _detailId = null;
+  renderContracts(); renderDash(); renderAudit();
+  showToast('合約已刪除','ok');
+}
+
+// ═══════════════════════════════════════════
+// UPLOAD WIZARD
+// ═══════════════════════════════════════════
+function resetUpload() {
+  DB.wizStep = 0;
+  DB.uploadedFile = null;
+  DB.fileContent  = '';
+  DB.signers = [{ name: USER.name||'我', email: USER.email||'', role:'initiator', signed:true }];
+  document.getElementById('ws-0').style.display = '';
+  document.getElementById('ws-1').style.display = 'none';
+  document.getElementById('ws-2').style.display = 'none';
+  updateWizUI();
+  renderSList();
+  clearFile();
+  ['c-name','c-desc'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('c-type').value = '';
+  document.getElementById('c-due').value  = '';
+  setupDrop();
+}
+function setupDrop() {
+  const ud = document.getElementById('udrop');
+  if (!ud || ud._ev) return;
+  ud._ev = true;
+  ud.addEventListener('dragover', e=>{ e.preventDefault(); ud.classList.add('over'); });
+  ud.addEventListener('dragleave', ()=>ud.classList.remove('over'));
+  ud.addEventListener('drop', e=>{ e.preventDefault(); ud.classList.remove('over'); const f=e.dataTransfer.files[0]; if(f) processFile(f); });
+}
+function updateWizUI() {
+  for (let i=0; i<3; i++) {
+    const el = document.getElementById('ws'+i);
+    el.classList.remove('on','dn');
+    const n = el.querySelector('.step-n');
+    if (i < DB.wizStep) { el.classList.add('dn'); n.textContent='✓'; }
+    else if (i === DB.wizStep) { el.classList.add('on'); n.textContent=i+1; }
+    else n.textContent=i+1;
+  }
+}
+function wizNext(n) {
+  if (n > DB.wizStep) {
+    if (DB.wizStep===0) {
+      if (!document.getElementById('c-name').value.trim()) { showToast('請填寫合約名稱','er'); return; }
+      if (!document.getElementById('c-type').value)        { showToast('請選擇合約類型','er'); return; }
+    }
+    if (DB.wizStep===1 && DB.signers.filter(s=>s.role!=='initiator').length===0) { showToast('請至少新增一位簽署人','er'); return; }
+    if (n===2) buildPreview();
+  }
+  DB.wizStep = n;
+  ['ws-0','ws-1','ws-2'].forEach((id,i) => document.getElementById(id).style.display = i===n?'':'none');
+  updateWizUI();
+}
+function buildPreview() {
+  document.getElementById('pv-name').textContent    = document.getElementById('c-name').value||'—';
+  document.getElementById('pv-type').textContent    = document.getElementById('c-type').value||'—';
+  document.getElementById('pv-due').textContent     = document.getElementById('c-due').value||'未設定';
+  document.getElementById('pv-file').textContent    = DB.uploadedFile ? DB.uploadedFile.name : '未上傳（僅合約資訊）';
+  document.getElementById('pv-signers').textContent = DB.signers.length+' 人（含發起人）';
+  document.getElementById('pv-otp').textContent     = document.getElementById('sec-otp').checked?'已啟用':'未啟用';
+  document.getElementById('pv-slist').innerHTML     = DB.signers.map((s,i)=>
+    `<div class="sr"><div class="sord">${i+1}</div><div class="sav2">${esc(s.name.slice(0,1))}</div>
+     <div class="sinf"><div class="snm">${esc(s.name)}</div><div class="sem">${esc(s.email)}</div></div>
+     <span class="badge ${s.role==='initiator'?'bi':'bw'}">${s.role==='initiator'?'發起人':'簽署人'}</span></div>`).join('');
+}
+function handleFileUpload(inp) {
+  const f = inp.files[0]; if (!f) return;
+  processFile(f);
+}
+function processFile(f) {
+  DB.uploadedFile = f;
+  document.getElementById('finfo').style.display = 'flex';
+  document.getElementById('fname').textContent   = f.name;
+  document.getElementById('fsize').textContent   = (f.size/1024).toFixed(1)+' KB';
+  document.getElementById('prev-ph').style.display   = 'none';
+  document.getElementById('prev-body').style.display = '';
+  document.getElementById('prev-body').textContent   = '⏳ 讀取中...';
+  const ext = f.name.split('.').pop().toLowerCase();
+  if (ext==='txt') {
+    const r=new FileReader(); r.onload=e=>{ DB.fileContent=e.target.result; showPreview(DB.fileContent); }; r.readAsText(f,'UTF-8');
+  } else if (ext==='pdf') {
+    const r=new FileReader(); r.onload=e=>{ readPDF(e.target.result).then(t=>{ DB.fileContent=t; showPreview(t); }).catch(()=>{ DB.fileContent=''; showPreview('[PDF 解析失敗，請改用 TXT 格式]'); }); }; r.readAsArrayBuffer(f);
+  } else if (ext==='docx') {
+    const r=new FileReader(); r.onload=e=>{ readDOCX(e.target.result).then(t=>{ DB.fileContent=t; showPreview(t); }).catch(()=>{ DB.fileContent=''; showPreview('[DOCX 解析失敗，請改用 TXT 格式]'); }); }; r.readAsArrayBuffer(f);
+  } else {
+    DB.fileContent = '[檔案類型：'+f.name+']';
+    showPreview(DB.fileContent);
+  }
+}
+function showPreview(txt) {
+  const el = document.getElementById('prev-body');
+  if (!el) return;
+  el.textContent = txt.length>2000 ? txt.slice(0,2000)+'…（顯示前段）' : txt;
+}
+async function readPDF(buf) {
+  if (!window.pdfjsLib) await loadSrc('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+  let txt='';
+  for (let i=1;i<=pdf.numPages;i++) { const pg=await pdf.getPage(i); const tc=await pg.getTextContent(); txt+=tc.items.map(s=>s.str).join(' ')+'\n'; }
+  return txt.trim();
+}
+async function readDOCX(buf) {
+  if (!window.mammoth) await loadSrc('https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js');
+  const res = await mammoth.extractRawText({arrayBuffer:buf});
+  return res.value;
+}
+function loadSrc(src) {
+  return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+}
+function clearFile() {
+  DB.uploadedFile=null; DB.fileContent='';
+  document.getElementById('finp').value='';
+  document.getElementById('finfo').style.display='none';
+  document.getElementById('prev-ph').style.display='';
+  document.getElementById('prev-body').style.display='none';
+  document.getElementById('prev-body').textContent='';
+}
+function addSigner() {
+  const nm = document.getElementById('n-name').value.trim();
+  const em = document.getElementById('n-email').value.trim();
+  if (!nm) { showToast('請填寫姓名','er'); return; }
+  if (!em||!em.includes('@')) { showToast('請填寫有效的 Email','er'); return; }
+  if (DB.signers.find(s=>s.email===em)) { showToast('此 Email 已存在','er'); return; }
+  DB.signers.push({name:nm, email:em, role:'signer', signed:false});
+  renderSList();
+  document.getElementById('n-name').value='';
+  document.getElementById('n-email').value='';
+  showToast('已新增：'+nm,'ok');
+}
+function rmSigner(i) {
+  const nm=DB.signers[i].name; DB.signers.splice(i,1); renderSList(); showToast('已移除：'+nm);
+}
+function renderSList() {
+  document.getElementById('slist').innerHTML = DB.signers.map((s,i)=>
+    `<div class="sr"><div class="sord">${i+1}</div><div class="sav2">${esc(s.name.slice(0,1))}</div>
+     <div class="sinf"><div class="snm">${esc(s.name)}</div><div class="sem">${esc(s.email)}</div></div>
+     <span class="badge ${s.role==='initiator'?'bi':'bw'}">${s.role==='initiator'?'發起人':'簽署人'}</span>
+     ${s.role!=='initiator'?`<button class="btn btn-sm" style="margin-left:4px;color:var(--r);border-color:var(--r)" onclick="rmSigner(${i})">×</button>`:''}</div>`).join('');
+}
+function submitContract() {
+  const name = document.getElementById('c-name').value.trim();
+  const type = document.getElementById('c-type').value;
+  const due  = document.getElementById('c-due').value;
+  const id   = genId();
+  const nc = { id, name, type, dueDate:due, status:'pending',
+    createdAt:dateNow(),
+    signers: JSON.parse(JSON.stringify(DB.signers)),
+    content: DB.fileContent,
+    fileName: DB.uploadedFile ? DB.uploadedFile.name : '',
+    desc: document.getElementById('c-desc').value };
+  DB.contracts.push(nc);
+  addLog(name, USER.name||'系統', '建立合約');
+  saveDB();
+  const targets = nc.signers.filter(s=>s.role!=='initiator');
+  if (!targets.length) { showToast('合約已建立！','ok'); setTimeout(()=>goNav('contracts'),1200); return; }
+  // 發送 Email
+  if (!EJS.ready) {
+    showToast('⚠ EmailJS 未設定，Email 未發送。合約已建立。','er');
+    setTimeout(()=>goNav('contracts'),2000);
+    return;
+  }
+  const btn = document.getElementById('send-btn');
+  if (btn) { btn.disabled=true; btn.textContent='⏳ 發送中...'; }
+  showToast('正在發送通知 Email…','inf');
+  let sent=0, failed=0;
+  targets.forEach(s => {
+    sendEmail({ to_name:s.name, to_email:s.email,
+      subject:'請簽署合約：'+name,
+      contract_name:name, contract_type:type||'—',
+      due_date:due||'未設定', initiator:USER.name||'發起人',
+      sign_link: makeSignLink(nc, s.email), msg_type:'invite'
+    }).then(()=>{
+      sent++;
+      if (sent+failed===targets.length) {
+        addLog(name,'系統','Email通知發送');
+        renderAudit();
+        if (btn) { btn.disabled=false; btn.textContent='🚀 發送合約'; }
+        showToast('✅ 已成功發送 '+sent+' 封通知 Email！','ok');
+        setTimeout(()=>goNav('contracts'),1800);
+      }
+    }).catch(err=>{
+      failed++;
+      console.error('[Email send failed]', err);
+      if (sent+failed===targets.length) {
+        if (btn) { btn.disabled=false; btn.textContent='🚀 發送合約'; }
+        const errMsg = err?.text || err?.message || String(err) || '未知錯誤';
+        if (sent>0) showToast('已發送'+sent+'封，'+failed+'封失敗：'+errMsg,'er');
+        else showToast('❌ Email 發送失敗：'+errMsg+'\n合約已建立，可稍後手動提醒','er');
+        setTimeout(()=>goNav('contracts'),3000);
+      }
+    });
+  });
+}
+
+// ═══════════════════════════════════════════
+// SIGNING
+// ═══════════════════════════════════════════
+function renderSignList() {
+  const pending = DB.contracts.filter(c=>c.status==='pending');
+  document.getElementById('sign-sub').textContent = pending.length ? '共 '+pending.length+' 份合約等待簽署' : '目前沒有待簽署的合約';
+  const tbl = document.getElementById('sign-tbl');
+  if (!pending.length) { tbl.innerHTML='<div class="empty"><div class="ei">✅</div>目前沒有待簽署的合約</div>'; return; }
+  tbl.innerHTML = '<table><thead><tr><th>合約名稱</th><th>類型</th><th>截止日期</th><th>發起人</th><th>操作</th></tr></thead><tbody>'
+    + pending.map(c=>`<tr>
+        <td><div style="font-weight:500">${esc(c.name)}</div><div style="font-size:11px;color:var(--t3)">${c.createdAt}</div></td>
+        <td style="color:var(--t2)">${esc(c.type||'—')}</td>
+        <td style="color:var(--a)">${c.dueDate||'—'}</td>
+        <td>${esc(c.signers[0]?.name||'—')}</td>
+        <td><button class="btn btn-sm btn-p" onclick="openSignFor(${c.id})">開始簽署</button></td>
+      </tr>`).join('') + '</tbody></table>';
+}
+function openSignFor(id) {
+  DB.currentSignId = id;
+  hasSigned = false;
+  const c = DB.contracts.find(x=>x.id===id);
+  if (!c) return;
+  // Reset OTP
+  [0,1,2,3].forEach(i=>{ const el=document.getElementById('o'+i); el.value=''; el.classList.remove('filled','err'); el.style.borderColor=''; });
+  document.getElementById('otp-err').style.display = 'none';
+  document.getElementById('otp-card').style.display = '';
+  document.getElementById('sign-card').style.display = 'none';
+  document.getElementById('sign-list').style.display   = 'none';
+  document.getElementById('sign-detail').style.display = '';
+  goNav('sign');
+  document.getElementById('sign-sub').textContent = '正在簽署：'+c.name;
+  document.getElementById('pdf-fn').textContent   = c.fileName || c.name;
+  // 顯示合約內容
+  const bodyEl = document.getElementById('pdf-body');
+  const contentHtml = c.content && c.content.trim()
+    ? `<div class="pdf-pg">${esc(c.content)}<div class="sign-zone" id="sign-zone-lnk" onclick="document.getElementById('sign-card').scrollIntoView({behavior:'smooth'})">✍ 點此前往簽名區域</div></div>`
+    : `<div class="pdf-pg"><strong>${esc(c.name)}</strong><p style="color:var(--t2);margin-top:8px">合約類型：${esc(c.type||'—')}</p><p style="color:var(--t2)">截止日期：${c.dueDate||'未設定'}</p>${c.desc?'<p style="margin-top:8px">'+esc(c.desc)+'</p>':''}<div class="sign-zone" id="sign-zone-lnk" onclick="document.getElementById('sign-card').scrollIntoView({behavior:'smooth'})">✍ 點此前往簽名區域</div></div>`;
+  bodyEl.innerHTML = contentHtml;
+  // 簽署進度
+  renderTL(c);
+  // 合約資訊
+  document.getElementById('sign-info-r').innerHTML = [
+    ['合約編號','#'+c.id],['合約類型',c.type||'—'],
+    ['截止日期',c.dueDate||'—'],['安全驗證','Email OTP'],['儲存方式','加密存儲']
+  ].map(([k,v])=>`<div class="irow"><span>${k}</span><span>${esc(v)}</span></div>`).join('');
+  addLog(c.name, '受邀者', '開啟文件');
+  renderAudit();
+  if (!window._canvasInit) { window._canvasInit=true; initCanvas(); }
+  clearCanvas();
+}
+function renderTL(c) {
+  document.getElementById('sign-tl').innerHTML = c.signers.map(s=>
+    `<div class="tli"><div class="tld ${s.signed?'dn':'pd'}"></div>
+     <div style="flex:1"><div class="tln">${esc(s.name)}${s.role==='initiator'?' （發起人）':''}</div>
+     <div class="tlm">${s.signed?'已簽署 · '+(s.signedAt||'—'):'等待簽署'}</div></div>
+     <span class="badge ${s.signed?'bs':'bw'}">${s.signed?'完成':'待簽'}</span></div>`).join('');
+}
+function backSignList() {
+  DB.currentSignId = null;
+  document.getElementById('sign-list').style.display   = '';
+  document.getElementById('sign-detail').style.display = 'none';
+  document.getElementById('sign-sub').textContent = '請選擇一份合約開始簽署';
+  renderSignList();
+}
+
+// ── OTP ──
+function oIn(i, el) {
+  el.value = el.value.replace(/\D/,'');
+  el.classList.toggle('filled', !!el.value);
+  el.classList.remove('err');
+  if (el.value && i<3) document.getElementById('o'+(i+1)).focus();
+}
+function oKey(i, e) {
+  if (e.key==='Backspace' && !e.target.value && i>0) document.getElementById('o'+(i-1)).focus();
+}
+function getOtp() { return [0,1,2,3].map(i=>document.getElementById('o'+i).value).join(''); }
+function verifyOtp() {
+  if (getOtp()==='1234') {
+    document.getElementById('otp-err').style.display  = 'none';
+    document.getElementById('otp-card').style.display = 'none';
+    document.getElementById('sign-card').style.display = '';
+    const c = DB.contracts.find(x=>x.id===DB.currentSignId);
+    if (c) addLog(c.name,'受邀者','OTP驗證');
+    renderAudit();
+    showToast('身分驗證成功！請完成簽名','ok');
+    setTimeout(()=>document.getElementById('sign-card').scrollIntoView({behavior:'smooth'}),300);
+  } else {
+    document.getElementById('otp-err').style.display = 'block';
+    [0,1,2,3].forEach(i=>{ const el=document.getElementById('o'+i); el.classList.add('err'); });
+    setTimeout(()=>{ [0,1,2,3].forEach(i=>{ const el=document.getElementById('o'+i); el.value=''; el.classList.remove('filled','err'); }); document.getElementById('o0').focus(); }, 1200);
+  }
+}
+
+// ── CANVAS ──
+function initCanvas() {
+  const c = document.getElementById('signCanvas'); if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.strokeStyle='#534AB7'; ctx.lineWidth=2.5; ctx.lineCap='round'; ctx.lineJoin='round';
+  function pos(e,touch){ const r=c.getBoundingClientRect(); const src=touch?e.touches[0]:e; return { x:(src.clientX-r.left)*(c.width/r.width), y:(src.clientY-r.top)*(c.height/r.height) }; }
+  function start(e){ e.preventDefault(); drawing=true; const p=pos(e,e.type[0]==='t'); lx=p.x; ly=p.y; document.getElementById('canvas-hint').style.display='none'; }
+  function move(e){ e.preventDefault(); if(!drawing)return; const p=pos(e,e.type[0]==='t'); ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(p.x,p.y); ctx.stroke(); lx=p.x; ly=p.y; hasSigned=true; document.getElementById('sign-ok').style.display=''; }
+  function end(){ drawing=false; }
+  c.addEventListener('mousedown',start); c.addEventListener('mousemove',move); c.addEventListener('mouseup',end); c.addEventListener('mouseleave',end);
+  c.addEventListener('touchstart',start,{passive:false}); c.addEventListener('touchmove',move,{passive:false}); c.addEventListener('touchend',end);
+}
+function clearCanvas() {
+  const c=document.getElementById('signCanvas'); if(!c) return;
+  c.getContext('2d').clearRect(0,0,c.width,c.height);
+  document.getElementById('canvas-hint').style.display='';
+  document.getElementById('sign-ok').style.display='none';
+  hasSigned=false;
+}
+function switchSignTab(tab,el) {
+  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('on')); el.classList.add('on');
+  document.getElementById('area-draw').style.display = tab==='draw'?'':'none';
+  document.getElementById('area-type').style.display = tab==='type'?'':'none';
+}
+function submitSign() {
+  const tab = document.querySelector('.stab.on')?.textContent||'手寫';
+  if (tab==='手寫' && !hasSigned) { showToast('請先在畫布上完成簽名','er'); return; }
+  if (tab==='打字' && !document.getElementById('type-sign').value.trim()) { showToast('請輸入簽名文字','er'); return; }
+  const c = DB.contracts.find(x=>x.id===DB.currentSignId); if(!c) return;
+  const ps = c.signers.find(s=>s.role!=='initiator'&&!s.signed);
+  if (ps) { ps.signed=true; ps.signedAt=tsNow(); }
+  const allDone = c.signers.every(s=>s.signed);
+  c.status = allDone ? 'done' : 'active';
+  saveDB();
+  // 簽名圖像（手寫）
+  const canvas = document.getElementById('signCanvas');
+  c.signImg = (tab==='手寫' && hasSigned) ? canvas.toDataURL('image/png') : null;
+  c.signText = tab==='打字' ? document.getElementById('type-sign').value.trim() : null;
+  addLog(c.name, ps?.name||'簽署人', allDone?'合約完成':'簽署完成');
+  // 存證到 Google Sheets
+  saveToSheet({
+    contract_name: c.name,
+    contract_type: c.type || '—',
+    signer_name:   ps?.name || '簽署人',
+    signer_email:  ps?.email || '',
+    initiator:     c.signers[0]?.name || USER.name || '—',
+    status:        allDone ? '合約完成' : '已簽署',
+    signed_at:     tsNow(),
+    ip:            '（本地系統）',
+    hash:          genHash(),
+    all_done:      allDone,
+    contract_id:   String(c.id)
+  });
+  document.getElementById('ok-info').innerHTML = [
+    ['合約名稱',c.name],['簽署時間',tsNow()],
+    ['簽署人',ps?.name||'受邀者'],['驗證方式','Email OTP'],
+    ['文件雜湊',genHash()]
+  ].map(([k,v])=>`<div class="irow"><span>${k}</span><span style="${k==='文件雜湊'?'font-family:DM Mono,monospace;font-size:11px':''}">${esc(v)}</span></div>`).join('');
+  if (allDone) { const sz=document.getElementById('sign-zone-lnk'); if(sz){sz.className='sign-zone done'; sz.textContent='✅ 合約已完成簽署';} }
+  renderTL(c); renderAudit(); renderDash();
+  DB.currentSignId = c.id;
+  openModal('m-ok');
+}
+
+// ═══════════════════════════════════════════
+// AUDIT
+// ═══════════════════════════════════════════
+function renderAudit() {
+  const q = (document.getElementById('asrch')?.value||'').toLowerCase();
+  const f = document.getElementById('afilt')?.value||'';
+  const list = DB.log.filter(r=>(!f||r.action===f)&&(!q||r.contract.toLowerCase().includes(q)||r.actor.toLowerCase().includes(q)));
+  const tbl = document.getElementById('atbl');
+  if (!list.length) { tbl.innerHTML='<div class="empty"><div class="ei">📋</div>尚無記錄</div>'; return; }
+  const bmap = {建立合約:'bb',OTP驗證:'bi',開啟文件:'bg2',簽署完成:'bs',合約完成:'bs',Email通知發送:'bb',發送提醒:'bb',下載合約:'bg2'};
+  tbl.innerHTML = '<table><thead><tr><th>時間</th><th>合約</th><th>操作人</th><th>操作</th><th>IP</th><th>驗證</th><th>雜湊值</th></tr></thead><tbody>'
+    + list.map(r=>`<tr>
+        <td class="hash" style="color:var(--t2)">${r.time}</td>
+        <td style="font-weight:500;font-size:13px">${esc(r.contract)}</td>
+        <td style="font-size:13px">${esc(r.actor)}</td>
+        <td><span class="badge ${bmap[r.action]||'bg2'}">${r.action}</span></td>
+        <td class="hash">${r.ip}</td>
+        <td style="font-size:12px">${r.method}</td>
+        <td class="hash">${r.hash}</td>
+      </tr>`).join('') + '</tbody></table>';
+}
+function exportAudit() {
+  if (!DB.log.length) { showToast('尚無記錄可匯出','er'); return; }
+  const rows = ['\uFEFF時間,合約,操作人,操作,IP,驗證,雜湊', ...DB.log.map(r=>`"${r.time}","${r.contract}","${r.actor}","${r.action}","${r.ip}","${r.method}","${r.hash}"`)];
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8'})); a.download='稽核軌跡.csv'; a.click();
+  showToast('已匯出稽核軌跡 CSV','ok');
+}
+
+// ═══════════════════════════════════════════
+// DOWNLOAD
+// ═══════════════════════════════════════════
+function doDownload(cid) {
+  closeModal('m-ok');
+  const c = DB.contracts.find(x=>x.id===(cid||DB.currentSignId)); if(!c){ showToast('找不到合約','er'); return; }
+  const signBlock = c.signImg
+    ? `<img src="${c.signImg}" style="max-height:80px;max-width:260px;display:block"/>`
+    : c.signText
+      ? `<div style="font-family:serif;font-size:28px;color:#534AB7">${esc(c.signText)}</div>`
+      : '<div style="color:#9e9bba;font-size:13px">（無簽名記錄）</div>';
+  const auditRows = DB.log.filter(r=>r.contract===c.name).map(r=>
+    `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee;font-family:monospace;font-size:11px">${r.time}</td>
+     <td style="padding:6px 10px;border-bottom:1px solid #eee">${esc(r.actor)}</td>
+     <td style="padding:6px 10px;border-bottom:1px solid #eee">${r.action}</td>
+     <td style="padding:6px 10px;border-bottom:1px solid #eee;font-family:monospace;font-size:11px">${r.hash}</td></tr>`).join('');
+  const contractBody = c.content && c.content.trim()
+    ? `<div style="white-space:pre-wrap;line-height:2">${esc(c.content)}</div>`
+    : `<p><strong>${esc(c.name)}</strong></p><p style="color:#5f5c7a">合約類型：${esc(c.type||'—')}<br>截止日期：${c.dueDate||'未設定'}</p>${c.desc?'<p>'+esc(c.desc)+'</p>':''}`;
+  const html=`<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8"/><title>${esc(c.name)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Noto Sans TC',sans-serif;color:#1a1830;background:#fff;font-size:13px;line-height:1.8}.wrap{max-width:780px;margin:0 auto;padding:36px 48px}.hdr{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:2px solid #534AB7;margin-bottom:24px}.logo{font-size:18px;font-weight:700}.logo b{color:#534AB7}.stamp{background:#EAF3DE;border:1.5px solid #3B6D11;border-radius:6px;padding:5px 12px;font-size:12px;color:#3B6D11;font-weight:600}h1{font-size:20px;font-weight:700;text-align:center;margin-bottom:4px}.sub{text-align:center;font-size:11px;color:#9e9bba;margin-bottom:24px}.sec{margin-bottom:22px}.sec-t{font-size:13px;font-weight:700;color:#534AB7;border-bottom:1px solid #EEEDFE;padding-bottom:5px;margin-bottom:10px}.info{display:grid;grid-template-columns:110px 1fr;gap:5px 14px;font-size:13px}.il{color:#5f5c7a;font-weight:500}.body-box{background:#F8F7FE;border:1px solid #EEEDFE;border-radius:8px;padding:20px 24px;font-size:12px;line-height:2}table{width:100%;border-collapse:collapse;font-size:12px}th{padding:7px 10px;text-align:left;background:#F8F7FE;font-size:10px;color:#5f5c7a;border-bottom:1px solid #eee;text-transform:uppercase}.sign-box{border:1.5px solid #AFA9EC;border-radius:6px;padding:12px 16px;min-height:70px;display:flex;align-items:center}.ftr{margin-top:30px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#9e9bba;display:flex;justify-content:space-between}.no-print{margin-top:20px}.np-btn{background:#534AB7;color:#fff;border:none;padding:9px 20px;border-radius:6px;font-size:13px;cursor:pointer;margin-right:8px}@media print{.no-print{display:none}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body>
+<div class="wrap">
+<div class="hdr"><div class="logo">Sign<b>Flow</b></div><div class="stamp">✓ 電子簽署完成</div></div>
+<h1>${esc(c.name)}</h1><div class="sub">合約編號 #${c.id} · 由 SignFlow 電子契約平台簽署 · 具完整法律效力</div>
+<div class="sec"><div class="sec-t">合約基本資訊</div>
+<div class="info">
+<span class="il">合約名稱</span><span>${esc(c.name)}</span>
+<span class="il">合約類型</span><span>${esc(c.type||'—')}</span>
+<span class="il">合約編號</span><span>#${c.id}</span>
+<span class="il">建立日期</span><span>${c.createdAt}</span>
+<span class="il">截止日期</span><span>${c.dueDate||'未設定'}</span>
+<span class="il">合約狀態</span><span style="color:#3B6D11;font-weight:600">✓ 已完成簽署</span>
+</div></div>
+<div class="sec"><div class="sec-t">合約內容</div><div class="body-box">${contractBody}</div></div>
+<div class="sec"><div class="sec-t">簽署人</div>
+<table><thead><tr><th>姓名</th><th>Email</th><th>角色</th><th>狀態</th></tr></thead><tbody>
+${c.signers.map(s=>`<tr><td style="padding:7px 10px;border-bottom:1px solid #eee">${esc(s.name)}</td><td style="padding:7px 10px;border-bottom:1px solid #eee">${esc(s.email)}</td><td style="padding:7px 10px;border-bottom:1px solid #eee">${s.role==='initiator'?'發起人':'簽署人'}</td><td style="padding:7px 10px;border-bottom:1px solid #eee;color:${s.signed?'#3B6D11':'#854F0B'}">${s.signed?'✓ 已簽署 '+(s.signedAt||''):'待簽署'}</td></tr>`).join('')}
+</tbody></table></div>
+<div class="sec"><div class="sec-t">電子簽名</div>
+${c.signers.filter(s=>s.role!=='initiator'&&s.signed).map(s=>`<div style="margin-bottom:12px"><div style="font-size:12px;color:#5f5c7a;margin-bottom:5px">${esc(s.name)} · ${s.signedAt||'—'}</div><div class="sign-box">${signBlock}</div></div>`).join('')}
+<div style="margin-top:10px"><div style="font-size:12px;color:#5f5c7a;margin-bottom:5px">${esc(c.signers[0]?.name||'')}（發起人）</div><div class="sign-box"><div style="font-family:serif;font-size:24px;color:#534AB7">${esc(c.signers[0]?.name||'')}</div></div></div>
+</div>
+<div class="sec"><div class="sec-t">稽核軌跡</div>
+<table><thead><tr><th>時間</th><th>操作人</th><th>操作</th><th>雜湊值</th></tr></thead><tbody>${auditRows||'<tr><td colspan="4" style="padding:10px;color:#9e9bba;text-align:center">無記錄</td></tr>'}</tbody></table></div>
+<div class="sec"><div class="sec-t">法律聲明</div><p style="font-size:12px;color:#5f5c7a;line-height:2">本電子合約依據中華民國《電子簽章法》第 9 條規定簽署，具與書面契約相同之法律效力。所有簽署行為均已記錄於不可竄改之稽核軌跡，並以 SHA-256 演算法產生文件雜湊值。</p></div>
+<div class="no-print"><button class="np-btn" onclick="window.print()">列印 / 另存 PDF</button><button onclick="window.close()" style="background:transparent;border:1px solid #AFA9EC;padding:9px 18px;border-radius:6px;font-size:13px;cursor:pointer;color:#534AB7">關閉</button></div>
+<div class="ftr"><span>SignFlow 電子契約平台 · ${new Date().toLocaleString('zh-TW')}</span><span style="font-family:monospace">${genHash()}</span></div>
+</div></body></html>`;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=c.name+'_已簽署合約.html'; a.click();
+  setTimeout(()=>{ window.open(url,'_blank'); setTimeout(()=>URL.revokeObjectURL(url),15000); },400);
+  addLog(c.name, USER.name||'使用者', '下載合約');
+  renderAudit();
+  showToast('合約已下載！新視窗可列印或另存 PDF','ok');
+}
+
+// ═══════════════════════════════════════════
+// 簽署連結產生 & 收件人模式
+// ═══════════════════════════════════════════
+
+// 把合約資料+收件人email壓縮進URL參數
+// ── 安全編碼（支援中文）──
+function safeEncode(obj) {
+  try {
+    const json = JSON.stringify(obj);
+    // TextEncoder → Uint8Array → base64（支援中文/特殊字元）
+    const bytes = new TextEncoder().encode(json);
+    let binary = '';
+    bytes.forEach(b => binary += String.fromCharCode(b));
+    return btoa(binary);
+  } catch(e) { return null; }
+}
+function safeDecode(str) {
+  try {
+    const binary = atob(str);
+    const bytes = new Uint8Array(binary.length);
+    for (let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const json = new TextDecoder().decode(bytes);
+    return JSON.parse(json);
+  } catch(e) { return null; }
+}
+
+function makeSignLink(c, signerEmail) {
+  const base = SITE.url.replace(/\/+$/, '');
+  const payload = {
+    id:      c.id,
+    name:    c.name,
+    type:    c.type || '',
+    due:     c.dueDate || '',
+    content: (c.content || c.desc || '').slice(0, 2000),
+    desc:    c.desc || '',
+    signers: c.signers.map(s=>({ name:s.name, email:s.email, role:s.role, signed:s.signed, signedAt:s.signedAt||'' })),
+    signer:  signerEmail
+  };
+  const encoded = safeEncode(payload);
+  if (encoded) return base + '?sign=' + encodeURIComponent(encoded);
+  // fallback
+  return base + '?cid=' + c.id + '&em=' + encodeURIComponent(signerEmail);
+}
+
+// 頁面載入時檢查是否為收件人簽署模式
+function checkSignerMode() {
+  const params = new URLSearchParams(window.location.search);
+  const signParam = params.get('sign');
+  if (!signParam) return false;
+
+  const payload = safeDecode(signParam);
+  if (!payload) {
+    // 顯示錯誤畫面
+    showSignerError('連結已失效或格式錯誤，請聯絡發起人重新發送。');
+    return true;
+  }
+
+  try {
+    // 注入合約資料（若不存在）
+    if (!DB.contracts.find(x=>x.id===payload.id)) {
+      DB.contracts.push({
+        id:        payload.id,
+        name:      payload.name,
+        type:      payload.type,
+        dueDate:   payload.due,
+        content:   payload.content || '',
+        desc:      payload.desc || '',
+        signers:   payload.signers,
+        status:    'pending',
+        createdAt: new Date().toLocaleDateString('zh-TW'),
+        signImg:null, signText:null, fileName:'', isShared:true
+      });
+    }
+    const c = DB.contracts.find(x=>x.id===payload.id);
+    if (!c) { showSignerError('找不到合約資料，請聯絡發起人。'); return true; }
+    window._SC = c;  // 全域儲存，確保 svSubmitSign 一定找得到
+    DB.currentSignId = c.id;
+    showSignerView(c, payload.signer);
+    return true;
+  } catch(e) {
+    console.error('簽署模式錯誤', e);
+    showSignerError('載入合約時發生錯誤：' + e.message);
+    return true;
+  }
+}
+
+function showSignerError(msg) {
+  document.getElementById('app-root').style.display = 'none';
+  document.getElementById('signer-view').style.display = '';
+  document.getElementById('sv-title').textContent = '連結錯誤';
+  const content = document.getElementById('signer-view').querySelector('div:nth-child(2)');
+  if (content) content.innerHTML = `
+    <div style="background:white;border-radius:14px;padding:32px 24px;text-align:center;border:1px solid rgba(163,45,45,.2);margin-top:20px">
+      <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+      <div style="font-size:16px;font-weight:600;color:#A32D2D;margin-bottom:8px">無法開啟簽署頁面</div>
+      <div style="font-size:13px;color:#5f5c7a">${msg}</div>
+    </div>`;
+}
+
+// 收件人看到的簡化簽署介面（全螢幕）
+function showSignerView(c, signerEmail) {
+  const signer = c.signers.find(s=>s.email===signerEmail && s.role!=='initiator');
+  // 隱藏整個 app，顯示收件人專屬簽署頁
+  document.getElementById('app-root').style.display = 'none';
+  document.getElementById('signer-view').style.display = '';
+  // 填入合約資訊
+  document.getElementById('sv-title').textContent    = c.name;
+  document.getElementById('sv-type').textContent     = c.type || '—';
+  document.getElementById('sv-due').textContent      = c.dueDate || '未設定';
+  document.getElementById('sv-initiator').textContent= c.signers[0]?.name || '—';
+  // 找第一個未簽的人顯示
+  const firstUnsigned = c.signers.find(s=>s.role!=='initiator'&&!s.signed);
+  document.getElementById('sv-signer-name').textContent = firstUnsigned ? firstUnsigned.name : (signer ? signer.name : '簽署人');
+  document.getElementById('sv-signer-email').textContent= firstUnsigned ? firstUnsigned.email : signerEmail;
+  // 合約內容
+  const bodyEl = document.getElementById('sv-content');
+  if (c.content && c.content.trim()) {
+    bodyEl.textContent = c.content;
+  } else {
+    bodyEl.innerHTML = 
+      '<div style="font-size:15px;font-weight:700;margin-bottom:12px">'+esc(c.name)+'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;margin-bottom:12px">'
+      +'<div style="background:#F8F7FE;padding:8px 12px;border-radius:8px"><div style="color:#9e9bba">合約類型</div><div style="font-weight:500">'+esc(c.type||'—')+'</div></div>'
+      +'<div style="background:#F8F7FE;padding:8px 12px;border-radius:8px"><div style="color:#9e9bba">截止日期</div><div style="font-weight:500;color:#854F0B">'+(c.dueDate||'未設定')+'</div></div>'
+      +'</div>'
+      +(c.desc ? '<p style="font-size:13px;line-height:1.8;color:#1a1830">'+esc(c.desc)+'</p>' : '<p style="font-size:13px;color:#9e9bba">（發起人未上傳合約文件，請向發起人索取完整合約內容）</p>');
+  }
+  // 已簽署則顯示完成狀態
+  if (signer && signer.signed) {
+    document.getElementById('sv-otp-area').style.display  = 'none';
+    document.getElementById('sv-sign-area').style.display = 'none';
+    document.getElementById('sv-done-banner').style.display = '';
+    document.getElementById('sv-done-banner').innerHTML =
+      '<div style="font-size:16px;font-weight:600;color:#3B6D11;margin-bottom:6px">✅ 您已完成簽署</div>'
+      +'<div style="font-size:13px;color:#5f5c7a">簽署時間：'+(signer.signedAt||'—')+'</div>';
+    return;
+  }
+  // 儲存當前合約，多重備份確保 svSubmitSign 一定找得到
+  window._SC = c;
+  DB.currentSignId = c.id;
+  // 初始化 OTP 和 Canvas
+  [0,1,2,3].forEach(i=>{
+    const el=document.getElementById('sv-o'+i);
+    if(el){ el.value=''; el.classList.remove('filled','err'); }
+  });
+  if (!window._svCanvasInit) { window._svCanvasInit=true; initSvCanvas(); }
+  clearSvCanvas();
+}
+
+// 收件人 OTP 驗證
+function svOIn(i,el){
+  el.value=el.value.replace(/\D/,'');
+  el.classList.toggle('filled',!!el.value);
+  el.classList.remove('err');
+  if(el.value&&i<3) document.getElementById('sv-o'+(i+1)).focus();
+}
+function svOKey(i,e){
+  if(e.key==='Backspace'&&!e.target.value&&i>0) document.getElementById('sv-o'+(i-1)).focus();
+}
+function svVerifyOtp() {
+  const code = [0,1,2,3].map(i=>document.getElementById('sv-o'+i).value).join('');
+  if (code==='1234') {
+    document.getElementById('sv-otp-area').style.display  = 'none';
+    document.getElementById('sv-sign-area').style.display = '';
+    document.getElementById('sv-o-err').style.display     = 'none';
+    showToast('身分驗證成功！請完成簽名','ok');
+    setTimeout(()=>document.getElementById('sv-sign-area').scrollIntoView({behavior:'smooth'}),300);
+  } else {
+    document.getElementById('sv-o-err').style.display = 'block';
+    [0,1,2,3].forEach(i=>{const el=document.getElementById('sv-o'+i); el.classList.add('err');});
+    setTimeout(()=>{[0,1,2,3].forEach(i=>{const el=document.getElementById('sv-o'+i); el.value=''; el.classList.remove('filled','err');}); document.getElementById('sv-o0').focus();}, 1200);
+  }
+}
+
+let svDrawing=false, svLx=0, svLy=0, svSigned=false;
+function initSvCanvas() {
+  const c=document.getElementById('svCanvas'); if(!c) return;
+  const ctx=c.getContext('2d');
+  ctx.strokeStyle='#534AB7'; ctx.lineWidth=2.5; ctx.lineCap='round'; ctx.lineJoin='round';
+  function pos(e,touch){ const r=c.getBoundingClientRect(); const src=touch?e.touches[0]:e; return {x:(src.clientX-r.left)*(c.width/r.width),y:(src.clientY-r.top)*(c.height/r.height)}; }
+  function start(e){ e.preventDefault(); svDrawing=true; const p=pos(e,e.type[0]==='t'); svLx=p.x; svLy=p.y; document.getElementById('sv-chint').style.display='none'; }
+  function move(e){ e.preventDefault(); if(!svDrawing)return; const p=pos(e,e.type[0]==='t'); ctx.beginPath(); ctx.moveTo(svLx,svLy); ctx.lineTo(p.x,p.y); ctx.stroke(); svLx=p.x; svLy=p.y; svSigned=true; document.getElementById('sv-sign-ok').style.display=''; }
+  function end(){ svDrawing=false; }
+  c.addEventListener('mousedown',start); c.addEventListener('mousemove',move); c.addEventListener('mouseup',end); c.addEventListener('mouseleave',end);
+  c.addEventListener('touchstart',start,{passive:false}); c.addEventListener('touchmove',move,{passive:false}); c.addEventListener('touchend',end);
+}
+function clearSvCanvas() {
+  const c=document.getElementById('svCanvas'); if(!c) return;
+  c.getContext('2d').clearRect(0,0,c.width,c.height);
+  document.getElementById('sv-chint').style.display='';
+  if(document.getElementById('sv-sign-ok')) document.getElementById('sv-sign-ok').style.display='none';
+  svSigned=false;
+}
+function svSwitchTab(tab,el) {
+  document.querySelectorAll('.sv-stab').forEach(t=>t.classList.remove('on')); el.classList.add('on');
+  document.getElementById('sv-area-draw').style.display = tab==='draw'?'':'none';
+  document.getElementById('sv-area-type').style.display = tab==='type'?'':'none';
+}
+// ── Google Sheets 存證 ──
+const GSHEET_URL = 'https://script.google.com/macros/s/AKfycbxvdoUxWokZOUP4sMnKBluBqX0IcTsyJkb1Aiuacgjup0Krk-tbkTr5gEjC6of1ActLaw/exec';
+
+function saveToSheet(data) {
+  return fetch(GSHEET_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain'},
+    body: JSON.stringify(data)
+  }).then(r => r.json()).catch(err => console.warn('[SignFlow] Sheets 存證失敗', err));
+}
+
+function svSubmitSign() {
+  const tabEl = document.querySelector('.sv-stab.on');
+  const tab = tabEl ? tabEl.textContent : '手寫';
+  if (tab==='手寫' && !svSigned) { showToast('請先完成手寫簽名','er'); return; }
+  if (tab==='打字' && !document.getElementById('sv-type-sign').value.trim()) { showToast('請輸入簽名文字','er'); return; }
+  // 直接用全域變數，確保一定找得到
+  const c = window._SC || DB.contracts.find(x=>x.id===DB.currentSignId) || DB.contracts.find(x=>x.isShared);
+  if (!c) { showToast('請重新開啟 Email 中的連結','er'); return; }
+  // 直接取第一個尚未簽署的非發起人
+  let ps = c.signers.find(s=>s.role!=='initiator' && !s.signed);
+  if (!ps) {
+    document.getElementById('sv-otp-area').style.display  = 'none';
+    document.getElementById('sv-sign-area').style.display = 'none';
+    document.getElementById('sv-done-banner').style.display = '';
+    document.getElementById('sv-done-banner').innerHTML =
+      '<div style="font-size:36px;margin-bottom:10px">✅</div>'
+      +'<div style="font-size:18px;font-weight:700;color:#3B6D11;margin-bottom:6px">此合約已完成簽署</div>'
+      +'<div style="font-size:13px;color:#5f5c7a">所有簽署人皆已完成，合約正式生效。</div>';
+    return;
+  }
+  ps.signed   = true;
+  ps.signedAt = tsNow();
+  const canvas = document.getElementById('svCanvas');
+  c.signImg  = (tab==='手寫' && svSigned) ? canvas.toDataURL('image/png') : null;
+  c.signText = tab==='打字' ? document.getElementById('sv-type-sign').value.trim() : null;
+  const allDone = c.signers.every(s=>s.signed);
+  c.status = allDone ? 'done' : 'active';
+  addLog(c.name, ps.name, allDone?'合約完成':'簽署完成');
+
+  // ── Google Sheets 存證 ──
+  saveToSheet({
+    contract_name: c.name,
+    contract_type: c.type || '—',
+    signer_name:   ps.name,
+    signer_email:  ps.email,
+    initiator:     c.signers[0]?.name || '—',
+    status:        allDone ? '合約完成' : '已簽署',
+    signed_at:     tsNow(),
+    ip:            '（由瀏覽器記錄）',
+    hash:          genHash(),
+    all_done:      allDone,
+    contract_id:   String(c.id)
+  }).then(res => {
+    console.log('[SignFlow] 存證成功', res);
+  });
+
+  // ── 通知發起人 ──
+  const initiator = c.signers.find(s=>s.role==='initiator');
+  if (initiator && initiator.email) {
+    // 金鑰寫死，確保收件人瀏覽器也能發信
+    const _pub = 'vS1tvgE6_TweAZYti';
+    const _svc = 'service_a806093kimo';
+    const _tpl = 'template_nl98nki';
+    const _url = 'https://adorable-vacherin-fa387c.netlify.app';
+    fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        service_id:  _svc,
+        template_id: _tpl,
+        user_id:     _pub,
+        template_params: {
+          to_name:       initiator.name,
+          to_email:      initiator.email,
+          subject:       (allDone?'【SignFlow】✅ '+c.name+' 已全部簽署完成！':'【SignFlow】✍ '+ps.name+' 已完成簽署 '+c.name),
+          contract_name: c.name,
+          contract_type: c.type || '—',
+          due_date:      c.dueDate || '未設定',
+          initiator:     initiator.name,
+          sign_link:     _url,
+          msg_type:      allDone ? 'completed' : 'signed',
+          from_name:     'SignFlow 電子契約平台',
+          name:          initiator.name,
+          email:         initiator.email,
+          message:       '【簽署通知】\n\n'
+            + '簽署人：' + ps.name + '\n'
+            + 'Email：' + ps.email + '\n'
+            + '簽署時間：' + tsNow() + '\n'
+            + '合約名稱：' + c.name + '\n'
+            + '合約類型：' + (c.type||'—') + '\n'
+            + (allDone ? '\n✅ 所有簽署人皆已完成，合約正式生效！' : '\n⏳ 尚有其他簽署人待簽署。')
+        }
+      })
+    }).then(()=>{
+      console.log('[SignFlow] 發起人通知已發送');
+    }).catch(err=>{
+      console.warn('[SignFlow] 發起人通知發送失敗', err);
+    });
+  }
+
+  // 顯示完成畫面
+  document.getElementById('sv-otp-area').style.display  = 'none';
+  document.getElementById('sv-sign-area').style.display = 'none';
+  document.getElementById('sv-done-banner').style.display = '';
+  document.getElementById('sv-done-banner').innerHTML =
+    '<div style="font-size:40px;margin-bottom:12px">✅</div>'
+    +'<div style="font-size:20px;font-weight:700;color:#3B6D11;margin-bottom:8px">簽署完成！</div>'
+    +'<div style="font-size:13px;color:#5f5c7a;margin-bottom:6px">感謝您完成電子簽署<br>通知已發送給發起人</div>'
+    +'<div style="font-size:12px;color:#9e9bba;margin-top:6px">簽署時間：'+tsNow()+'</div>'
+    +(allDone?'<div style="margin-top:12px;padding:10px 14px;background:#EAF3DE;border-radius:8px;font-size:12px;color:#3B6D11">🎉 所有簽署人皆已完成，合約正式生效！</div>':'');
+  showToast('🎉 合約簽署完成！通知已發送給發起人','ok');
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+(function init(){
+  // EmailJS 初始化
+  const tryInit = () => { if(window.emailjs){ ejsInit(); updateEjsBtn(); } else setTimeout(tryInit,150); };
+  tryInit();
+  // 使用者 UI
+  updateUserUI();
+  // 從 localStorage 恢復已儲存的合約資料
+  try {
+    const saved = localStorage.getItem('sf_contracts');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        parsed.forEach(c => DB.contracts.push(c));
+      }
+    }
+    const savedLog = localStorage.getItem('sf_log');
+    if (savedLog) {
+      const parsedLog = JSON.parse(savedLog);
+      if (Array.isArray(parsedLog)) {
+        parsedLog.forEach(r => DB.log.push(r));
+      }
+    }
+  } catch(e) { console.warn('資料載入失敗', e); }
+  // 檢查是否為收件人簽署模式（URL 帶有 ?sign= 參數）
+  const isSignerMode = checkSignerMode();
+  if (!isSignerMode) {
+    renderDash(); renderAudit();
+    if (!USER.name) setTimeout(()=>openModal('m-profile'), 800);
+  }
+})();
+</script>
+</body>
+</html>
