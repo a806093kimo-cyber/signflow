@@ -6,6 +6,25 @@
 <title>SignFlow — 電子契約簽署平台</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+  import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyCXKRA3lcI23fnXWWR6-Jn9fDSyi6rvdpA",
+    authDomain: "yifeng243-3097a.firebaseapp.com",
+    projectId: "yifeng243-3097a",
+    storageBucket: "yifeng243-3097a.firebasestorage.app",
+    messagingSenderId: "697672088804",
+    appId: "1:697672088804:web:16dc8093d08e7d76b780f1"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  window._db = db;
+  window._fbReady = true;
+  window._fbLib = { collection, doc, setDoc, getDoc, getDocs, onSnapshot, deleteDoc, query, orderBy };
+  // 通知主程式 Firebase 已就緒
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
 <style>
 :root{
   --p:#534AB7;--pl:#EEEDFE;--pm:#AFA9EC;--pd:#3C3489;
@@ -777,9 +796,71 @@ const esc     = s  => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 const tsNow   = () => new Date().toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
 const dateNow = () => new Date().toLocaleDateString('zh-TW');
 
+// ── Firebase 同步 ──
+async function fbSaveContract(c) {
+  if (!window._fbReady || !window._db) return;
+  try {
+    const { doc, setDoc } = window._fbLib;
+    const data = {...c, signImg: c.signImg ? '[已簽名]' : null, _updated: Date.now()};
+    await setDoc(doc(window._db, 'contracts', String(c.id)), data);
+  } catch(e) { console.warn('[FB] 儲存失敗', e); }
+}
+async function fbDeleteContract(id) {
+  if (!window._fbReady || !window._db) return;
+  try {
+    const { doc, deleteDoc } = window._fbLib;
+    await deleteDoc(doc(window._db, 'contracts', String(id)));
+  } catch(e) { console.warn('[FB] 刪除失敗', e); }
+}
+async function fbLoadContracts() {
+  if (!window._fbReady || !window._db) return;
+  try {
+    const { collection, getDocs } = window._fbLib;
+    const snap = await getDocs(collection(window._db, 'contracts'));
+    const loaded = [];
+    snap.forEach(d => loaded.push(d.data()));
+    if (loaded.length > 0) {
+      // 合併：Firebase 的資料優先（有則更新，無則新增）
+      loaded.forEach(fc => {
+        const idx = DB.contracts.findIndex(x => String(x.id) === String(fc.id));
+        if (idx >= 0) DB.contracts[idx] = fc;
+        else DB.contracts.push(fc);
+      });
+      renderDash(); renderContracts();
+      console.log('[FB] 已載入', loaded.length, '份合約');
+    }
+  } catch(e) { console.warn('[FB] 載入失敗', e); }
+}
+function fbListenContracts() {
+  if (!window._fbReady || !window._db) return;
+  try {
+    const { collection, onSnapshot } = window._fbLib;
+    onSnapshot(collection(window._db, 'contracts'), snap => {
+      snap.docChanges().forEach(change => {
+        const fc = change.doc.data();
+        const idx = DB.contracts.findIndex(x => String(x.id) === String(fc.id));
+        if (change.type === 'removed') {
+          if (idx >= 0) DB.contracts.splice(idx, 1);
+        } else {
+          if (idx >= 0) DB.contracts[idx] = fc;
+          else DB.contracts.push(fc);
+        }
+      });
+      renderDash(); renderContracts();
+      // 更新簽署中心
+      const sp = document.getElementById('sign-pending-table') || document.getElementById('sign-tbl');
+      if (sp) renderSignList();
+    });
+    console.log('[FB] 即時同步已啟動');
+  } catch(e) { console.warn('[FB] 監聽失敗', e); }
+}
+
 function saveDB() {
   try {
-    // 儲存合約（不含簽名圖像，避免 localStorage 超過 5MB）
+    // 收件人模式（URL有?sign=）不儲存，避免覆蓋發起人資料
+    if (window.location.search.includes('sign=')) return;
+    // 合約為空時不儲存，避免意外清空資料
+    if (DB.contracts.length === 0) return;
     const toSave = DB.contracts.map(c => ({...c, signImg: c.signImg ? '[已簽名]' : null}));
     localStorage.setItem('sf_contracts', JSON.stringify(toSave));
     localStorage.setItem('sf_log', JSON.stringify(DB.log.slice(0, 200)));
@@ -1222,7 +1303,14 @@ function confirmDelete() {
   // 移除合約
   DB.contracts = DB.contracts.filter(x=>x.id!==_detailId);
   addLog(c.name, USER.name||'使用者', '刪除合約');
-  saveDB();
+  fbDeleteContract(_detailId);
+  try {
+    if (!window.location.search.includes('sign=')) {
+      const toSave = DB.contracts.map(c2 => ({...c2, signImg: c2.signImg ? '[已簽名]' : null}));
+      localStorage.setItem('sf_contracts', JSON.stringify(toSave));
+      localStorage.setItem('sf_log', JSON.stringify(DB.log.slice(0, 200)));
+    }
+  } catch(e) {}
   closeModal('m-confirm-del');
   _detailId = null;
   renderContracts(); renderDash(); renderAudit();
@@ -1380,6 +1468,7 @@ function submitContract() {
   DB.contracts.push(nc);
   addLog(name, USER.name||'系統', '建立合約');
   saveDB();
+  fbSaveContract(nc);
   const targets = nc.signers.filter(s=>s.role!=='initiator');
   if (!targets.length) { showToast('合約已建立！','ok'); setTimeout(()=>goNav('contracts'),1200); return; }
   // 發送 Email
@@ -1548,6 +1637,7 @@ function submitSign() {
   const allDone = c.signers.every(s=>s.signed);
   c.status = allDone ? 'done' : 'active';
   saveDB();
+  fbSaveContract(c);
   // 簽名圖像（手寫）
   const canvas = document.getElementById('signCanvas');
   c.signImg = (tab==='手寫' && hasSigned) ? canvas.toDataURL('image/png') : null;
@@ -1901,7 +1991,8 @@ function svSubmitSign() {
   const allDone = c.signers.every(s=>s.signed);
   c.status = allDone ? 'done' : 'active';
   addLog(c.name, ps.name, allDone?'合約完成':'簽署完成');
-
+  // 收件人簽署後同步到 Firebase（發起人立即看到更新）
+  fbSaveContract(c);
   // ── Google Sheets 存證 ──
   saveToSheet({
     contract_name: c.name,
@@ -2007,6 +2098,14 @@ function svSubmitSign() {
   if (!isSignerMode) {
     renderDash(); renderAudit();
     if (!USER.name) setTimeout(()=>openModal('m-profile'), 800);
+    // 啟動 Firebase 同步
+    if (window._fbReady) {
+      fbLoadContracts().then(()=>fbListenContracts());
+    } else {
+      window.addEventListener('firebase-ready', ()=>{
+        fbLoadContracts().then(()=>fbListenContracts());
+      }, {once:true});
+    }
   }
 })();
 </script>
