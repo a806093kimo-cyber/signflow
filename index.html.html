@@ -1023,7 +1023,7 @@ function renderDash() {
   const tbl = document.getElementById('dash-tbl');
   if (!recent.length) { tbl.innerHTML='<div class="empty"><div class="ei">📄</div>尚無合約<br><button class="btn btn-p" style="margin-top:10px" onclick="goNav(\'upload\')">＋ 建立第一份</button></div>'; return; }
   tbl.innerHTML = '<table><thead><tr><th>合約名稱</th><th>狀態</th><th>簽署方</th></tr></thead><tbody>'
-    + recent.map(c=>`<tr style="cursor:pointer" onclick="showDetail(${c.id})">
+    + recent.map(c=>`<tr style="cursor:pointer" onclick="showDetail(${Number(c.id)})">
         <td><div style="font-weight:500">${esc(c.name)}</div><div style="font-size:11px;color:var(--t3)">${c.createdAt}</div></td>
         <td>${bh(c.status)}</td>
         <td style="font-size:13px">${esc(c.signers.filter(s=>s.role!=='initiator').map(s=>s.name).join(', '))||'—'}</td>
@@ -1074,11 +1074,11 @@ function renderContracts() {
           <td><div style="font-size:11px;color:var(--t3);margin-bottom:3px">${sc}/${tc}</div><div class="prog" style="width:70px"><div class="progf" style="width:${pct}%"></div></div></td>
           <td>${bh(c.status)}</td>
           <td style="white-space:nowrap">
-            ${c.status==='pending'?`<button class="btn btn-sm btn-p" onclick="openSignFor(${c.id})">簽署</button> `:''}
-            ${c.status==='done'   ?`<button class="btn btn-sm" onclick="doDownload(${c.id})">下載</button> `:''}
-            <button class="btn btn-sm" onclick="showDetail(${c.id})">詳情</button>
-            ${(c.status==='pending'||c.status==='active')?`<button class="btn btn-sm" onclick="sendReminder(${c.id})">提醒</button>`:''}
-            <button class="btn btn-sm" style="color:var(--r);border-color:var(--r)" onclick="quickDelete(${c.id})">刪除</button>
+            ${c.status==='pending'?`<button class="btn btn-sm btn-p" onclick="openSignFor(${Number(c.id)})">簽署</button> `:''}
+            ${c.status==='done'   ?`<button class="btn btn-sm" onclick="doDownload(${Number(c.id)})">下載</button> `:''}
+            <button class="btn btn-sm" onclick="showDetail(${Number(c.id)})">詳情</button>
+            ${(c.status==='pending'||c.status==='active')?`<button class="btn btn-sm" onclick="sendReminder(${Number(c.id)})">提醒</button>`:''}
+            <button class="btn btn-sm" style="color:var(--r);border-color:var(--r)" onclick="quickDelete(${Number(c.id)})">刪除</button>
           </td></tr>`;
       }).join('') + '</tbody></table>';
 }
@@ -1089,8 +1089,9 @@ function quickDelete(id) {
   openModal('m-confirm-del');
 }
 function sendReminder(id) {
-  const c = DB.contracts.find(x=>x.id===id);
-  if (!c) return;
+  id = Number(id) || id; // 統一轉數字
+  const c = DB.contracts.find(x=>Number(x.id)===Number(id) || x.id===id);
+  if (!c) { console.warn('showDetail: 找不到合約 id=', id, 'contracts=', DB.contracts.map(x=>x.id)); return; }
   const targets = c.signers.filter(s=>!s.signed && s.role!=='initiator');
   if (!targets.length) { showToast('所有人皆已簽署','ok'); return; }
   let sent=0, failed=0;
@@ -1434,7 +1435,7 @@ function renderSignList() {
         <td style="color:var(--t2)">${esc(c.type||'—')}</td>
         <td style="color:var(--a)">${c.dueDate||'—'}</td>
         <td>${esc(c.signers[0]?.name||'—')}</td>
-        <td><button class="btn btn-sm btn-p" onclick="openSignFor(${c.id})">開始簽署</button></td>
+        <td><button class="btn btn-sm btn-p" onclick="openSignFor(${Number(c.id)})">開始簽署</button></td>
       </tr>`).join('') + '</tbody></table>';
 }
 function openSignFor(id) {
