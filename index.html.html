@@ -1277,15 +1277,17 @@ function saveSignerEmails() {
   }
   showToast('正在重新發送通知…','inf');
   let sent=0, fail=0;
+  // 先儲存更新後的 email
+  saveDB(); fbSaveContract(c);
   toNotify.forEach(s => {
     sendEmail({ to_name:s.name, to_email:s.email,
-      subject:'[更新] 請簽署合約：'+c.name,
+      subject:'請簽署合約：'+c.name,
       contract_name:c.name, contract_type:c.type||'—',
       due_date:c.dueDate||'未設定',
       initiator:c.signers[0]?.name||USER.name,
-      sign_link: makeSignLink(nc, s.email), msg_type:'invite'
-    }).then(()=>{ sent++; if(sent+fail===toNotify.length){ showToast('已重新發送 '+sent+' 封通知','ok'); addLog(c.name,USER.name,'重新發送通知'); renderAudit(); } })
-      .catch(err=>{ fail++; const m=err?.text||err?.message||String(err); if(sent+fail===toNotify.length) showToast('發送失敗：'+m,'er'); });
+      sign_link: makeSignLink(c, s.email), msg_type:'invite'
+    }).then(()=>{ sent++; if(sent+fail===toNotify.length){ showToast('✅ 已重新發送 '+sent+' 封通知','ok'); addLog(c.name,USER.name,'重新發送通知'); renderAudit(); } })
+      .catch(err=>{ fail++; const m=err?.text||err?.message||String(err); if(sent+fail===toNotify.length) showToast('❌ 發送失敗：'+m,'er'); });
   });
   document.getElementById('det-edit-signers').style.display = 'none';
   document.getElementById('det-edit-btn').textContent = '✏️ 修改收件人';
